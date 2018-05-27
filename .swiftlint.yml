@@ -1,0 +1,4 @@
+disabled_rules:
+  - trailing_whitespace
+
+large_tuple: 3

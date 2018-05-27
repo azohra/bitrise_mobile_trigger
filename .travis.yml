@@ -1,0 +1,44 @@
+matrix:
+  include:
+    - os: linux  
+      sudo: required
+      services: docker
+      env: PLATFORM=linux
+
+    - os: osx
+      osx_image: xcode9.3
+
+branches:
+  except:
+    - /^v[0-9]/
+    
+script:
+  - if [[ $TRAVIS_PULL_REQUEST == "true" ]] || [[ $TRAVIS_BRANCH != "master" ]]; then bash ./ci_scripts/swiftlint.sh; fi
+  - if [[ $TRAVIS_PULL_REQUEST == "true" ]] || [[ $TRAVIS_BRANCH != "master" ]]; then bash ./ci_scripts/test_on_ci.sh; fi
+  - if [[ $TRAVIS_PULL_REQUEST == "false" ]] && [[ $TRAVIS_BRANCH == "master" ]]; then bash ./ci_scripts/tag_build.sh; fi
+
+
+# Deployment to Github via Releases
+before_deploy:
+  - ./ci_scripts/build_on_ci.sh
+
+deploy:
+  - provider: releases
+    api_key:
+      secure: "eAVLGjbpuKgZzQ7YN3yYNCYAU11XAPMRHmJ2FmbmaUlMr8n30wGrezaOnAIxzgMKpT7MaveFwW+QVHB7Epqh6ZwXCU30FS0Wdk9JG2AIaWraqV4PktzEE+nXAjgDUE+IPVbvK9grs8SxWBGMeumT64fzV3PTiSmd3RQ8uwdEKzFwreP2fl5rfTZGQLo1YopDFpXeG5+SUcbYoukWjy1GmtUMgWnTFsFIubQHizUzmzW1HYnPF77BUi5ikgIt4mpyeAwWCQlKSs9ovgHQBhoNrR0Uol5618ramnnwEihS5ZcyzUm/370HajIvMgbN2ujWi7kZVcQMWdG18lJUf5jLxmXpkQe9SbzoQbPttaWPK/Qnq7UtmOB8dr+J/3RxgODssCuy/Gb5FuhCp6vGVnNuRNmaV4WcJc3oWk3uAoB9R1idykHUZ0zEN3whn3xuoMBkNq+MuFrDwWnXn24PVD4KSJZ+xm1e4fHv7ZnPI1bsbJPIDPX8gSK0M8MHCz/Aq/r72ktGfOEombnMxaSdP0N31Oj9Pb3Rv74ACfLsQqdf/2lYCQJjUsrgc5Vow+2nHiC4+XOQOyLd8BwI0AIysTaX4QiPo9SerKy4FSlLPH/432HQaAh9Wl7p9PIR/tDvs0w0m1Z8DuJNIyH7FX8ShuqxB3I2Jyx8Dt/S69ltRVY6b9c="
+    file_glob: true
+    file: linux-release/bitriseTrigger_linux
+    skip_cleanup: true
+    on:
+      branch: master
+      condition: $TRAVIS_OS_NAME = "linux"
+
+  - provider: releases
+    api_key:
+      secure: "eAVLGjbpuKgZzQ7YN3yYNCYAU11XAPMRHmJ2FmbmaUlMr8n30wGrezaOnAIxzgMKpT7MaveFwW+QVHB7Epqh6ZwXCU30FS0Wdk9JG2AIaWraqV4PktzEE+nXAjgDUE+IPVbvK9grs8SxWBGMeumT64fzV3PTiSmd3RQ8uwdEKzFwreP2fl5rfTZGQLo1YopDFpXeG5+SUcbYoukWjy1GmtUMgWnTFsFIubQHizUzmzW1HYnPF77BUi5ikgIt4mpyeAwWCQlKSs9ovgHQBhoNrR0Uol5618ramnnwEihS5ZcyzUm/370HajIvMgbN2ujWi7kZVcQMWdG18lJUf5jLxmXpkQe9SbzoQbPttaWPK/Qnq7UtmOB8dr+J/3RxgODssCuy/Gb5FuhCp6vGVnNuRNmaV4WcJc3oWk3uAoB9R1idykHUZ0zEN3whn3xuoMBkNq+MuFrDwWnXn24PVD4KSJZ+xm1e4fHv7ZnPI1bsbJPIDPX8gSK0M8MHCz/Aq/r72ktGfOEombnMxaSdP0N31Oj9Pb3Rv74ACfLsQqdf/2lYCQJjUsrgc5Vow+2nHiC4+XOQOyLd8BwI0AIysTaX4QiPo9SerKy4FSlLPH/432HQaAh9Wl7p9PIR/tDvs0w0m1Z8DuJNIyH7FX8ShuqxB3I2Jyx8Dt/S69ltRVY6b9c="
+    file_glob: true
+    file: .build/release/bitriseTrigger_osx
+    skip_cleanup: true
+    on:
+      branch: master
+      condition: $TRAVIS_OS_NAME = "osx"

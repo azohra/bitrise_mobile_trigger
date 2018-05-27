@@ -1,0 +1,8 @@
+.DS_Store
+/.build
+/Packages
+/*.xcodeproj
+/.vscode/*
+/config.json
+/linux-release
+/linux-test
