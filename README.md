@@ -1,6 +1,6 @@
 # Mobile Trigger
 
-Mobile Trigger is a command line bitrise client, used to trigger workflows on [Bitrise](https://www.bitrise.io). It can be used as a standalone tool for triggering jobs but primarily intended to be used in combination with continuous integration systems like Bamboo CI or Gitlab CI.
+Mobile Trigger is a command line bitrise client, used to trigger workflows on [Bitrise](https://www.bitrise.io). It can be used as a standalone tool for triggering jobs but primarily intended to be used in combination with continuous integration systems like Bamboo CI or [Gitlab CI](https://about.gitlab.com/features/gitlab-ci-cd/).
 
 
 
