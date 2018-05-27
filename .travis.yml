@@ -18,7 +18,7 @@ script:
   - if [[ $TRAVIS_PULL_REQUEST == "false" ]] && [[ $TRAVIS_BRANCH == "master" ]]; then bash ./ci_scripts/tag_build.sh; fi
 
 
-# Deployment to Github via Releases
+# Deployment to Github via Releases using person oauth token
 before_deploy:
   - ./ci_scripts/build_on_ci.sh
 
