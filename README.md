@@ -1,4 +1,4 @@
-# Mobile Trigger
+# Mobile Trigger [![Build Status](https://travis-ci.org/azohra/bitrise_mobile_trigger.svg?branch=master)](https://travis-ci.org/azohra/bitrise_mobile_trigger)
 
 Mobile Trigger is a command line bitrise client, used to trigger workflows on [Bitrise](https://www.bitrise.io). It can be used as a standalone tool for triggering jobs but primarily intended to be used in combination with continuous integration systems like Bamboo CI or [Gitlab CI](https://about.gitlab.com/features/gitlab-ci-cd/).
 
