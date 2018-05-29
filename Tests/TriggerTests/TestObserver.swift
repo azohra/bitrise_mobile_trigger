@@ -1,4 +1,4 @@
-// import Foundation
+// Stubbed out for customized test reporting
 import XCTest
 
 class TestObserver: NSObject, XCTestObservation {
@@ -11,10 +11,7 @@ class TestObserver: NSObject, XCTestObservation {
 
     func testSuiteWillStart(_ testSuite: XCTestSuite) {}
 
-    func testSuiteDidFinish(_ testSuite: XCTestSuite) {
-        // print("Total number of test cases: ", testCaseTotal)
-        // print("Number of failed test cases: ", failedTC)
-    }
+    func testSuiteDidFinish(_ testSuite: XCTestSuite) {}
 
     func testSuite(
       _ testSuite: XCTestSuite,
@@ -28,24 +25,6 @@ class TestObserver: NSObject, XCTestObservation {
       didFailWithDescription description: String,
       inFile filePath: String?,
       atLine lineNumber: Int) {
-        // print(">>>>>>>>>>>>>>>>>> test case failed message " + description)
-        
-        // print("$$$$$$$$$$$$$$$$$$  NAME: \(testCase.name) %%%%%%%%%%%%%%%%%%%%%%%%")
-        // print("$$$$$$$$$$$$$$$$$$  TEST CASE COUNT: \(testCase.testCaseCount) %%%%%%%%%%%%%%%%%%%%%%%%")
-        // print("$$$$$$$$$$$$  SUCCEED? " + String(describing: testCase.testRun?.hasSucceeded) + " %%%%%%%%%%%%%%%%%")
-        // print("$$$$$$$$$$$$$$$$$$  EXECUTION COUNT: \(testCase.testRun?.executionCount) %%%%%%%%%%%%%%%%%%%%%%%%")
-        // print("$$$$$$$$$$$$$$$$$$  FAILURE COUNT: \(testCase.testRun?.failureCount) %%%%%%%%%%%%%%%%%%%%%%%%")
-        // print("$$$$$$$$$$$$$$$$$$  TEST CASE COUNT: \(testCase.testRun?.testCaseCount) %%%%%%%%%%%%%%%%%%%%%%%%")
-        // print("$$$$$$$$$$$$$  TOTAL FAILURE COUNT: \(testCase.testRun?.totalFailureCount) %%%%%%%%%%%%%%%%%%")
-        // print("$$$$$$$$$  UNEXPECTED EXCEPTION COUNT: \(testCase.testRun?.unexpectedExceptionCount) %%%%%%%%%%%%")
-        
-        // var tmpMsgArr = description.components(separatedBy: ".---")
-        // let testcaseID = tmpMsgArr[0]
-
-        // print("------" + testcaseID)
-
-        // yourmethodThatwillbeCalledWhenTCFail() // implement this method that you want to execute
-
         failedTC += 1
     }
 
