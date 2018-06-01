@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 VERSION_FILE=${PWD}/Sources/Trigger/version.swift
 CONTENTS=$(<$VERSION_FILE)
 APP_VERSION=$(echo $CONTENTS| cut -d'"' -f 2)
