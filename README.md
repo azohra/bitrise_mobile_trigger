@@ -13,7 +13,7 @@ Download the platform specific binary file from the release/tags page, and place
 ## Usage
 
 ```bash
-Usage: bitriseTrigger \[flag\] \[options\]
+Usage: bitriseTrigger [flag] [options]
 
 -V --version  - Version of cli running.
 
