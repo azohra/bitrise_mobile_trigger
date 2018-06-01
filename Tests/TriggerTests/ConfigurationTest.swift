@@ -23,7 +23,11 @@ class Configuration: XCTestCase {
     }
     """
     let json: Data = validJson.data(using: String.Encoding.utf8)!
-    let projectConfig = try? Config(with: json)
+    guard let projectConfig = try? Config(with: json) else { 
+      XCTAssert(false, "An error was thrown when try to great a Config instance.")
+      return
+    }
+    
     XCTAssert(projectConfig.theAccessToken == "valid-access-token", "Failed to get the access token")
     XCTAssert(projectConfig.token == "valid-token", "Failed to get the token")
     XCTAssert(projectConfig.slug == "valid-slug", "Failed to get the slug")
@@ -59,7 +63,11 @@ class Configuration: XCTestCase {
     }
     """.data(using: String.Encoding.utf8)!
     
-    let projectConfig = try? Config(with: extraKey)
+    guard let projectConfig = try? Config(with: extraKey) else {
+      XCTAssert(false, "An error was thrown when try to great a Config instance.")
+      return
+    }
+    
     XCTAssert(projectConfig.theAccessToken == "valid-access-token", "Failed to get the access token")
     XCTAssert(projectConfig.token == "valid-token", "Failed to get the token")
     XCTAssert(projectConfig.slug == "valid-slug", "Failed to get the slug")
