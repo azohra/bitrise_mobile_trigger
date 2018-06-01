@@ -1,6 +1,6 @@
-#if os(OSX)
-import Darwin
-#else
+import Foundation
+
+#if os(Linux)
 import Glibc
 setbuf(stdout, nil)
 #endif
@@ -34,8 +34,22 @@ guard let configPath = cliMap["-c"] as? String else {
     exit(1)
 }
 
-// Read the config file
-let projectConfig = Config(with: configPath)
+// Read the config file and create config object
+let json: Data
+do {
+  json = try Config.readConfigFile(path: configPath)
+} catch {
+  print(error)
+  exit(1)
+}
+
+let projectConfig: Config
+do {
+  projectConfig = try Config(with: json)
+} catch {
+  print(error)
+  exit(1)
+}
 
 // create bitrise client object
 let bitriseClient = BitriseClient(projectConfig: projectConfig)

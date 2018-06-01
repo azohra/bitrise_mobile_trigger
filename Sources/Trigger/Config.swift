@@ -10,25 +10,25 @@ public struct Config: Codable {
     let projectName: String
     public let slackURL: String?
 
-    public init(with configFilePath: String) {
-        let data: Data
-        if let fileHandle = FileHandle(forReadingAtPath: configFilePath) {
-            data = fileHandle.readDataToEndOfFile()
-            fileHandle.closeFile()
-        } else {
-            print("""
-              Could not find config.json file at location: \(configFilePath).
-              Please check config file location path.
-            """)
-            exit(1)
-        }
-        
-        do {
-            let decoder = JSONDecoder()
-            self = try decoder.decode(Config.self, from: data)
-        } catch {
-            print(error)
-            exit(1)
-        }
+    public init(with jsonData: Data) throws {
+      let decoder = JSONDecoder()
+      self = try decoder.decode(Config.self, from: jsonData)
     }
+}
+
+extension Config {
+  public enum FileError: Error {
+    case fileNotFound(String)
+  }
+  
+  public static func readConfigFile(path: String) throws -> Data {
+    guard let fileHandle = FileHandle(forReadingAtPath: path) else {
+      let errorMessage = "Could not find config.json file at location: \(path)."
+      throw FileError.fileNotFound(errorMessage)
+    }
+    
+    let data = fileHandle.readDataToEndOfFile()
+    fileHandle.closeFile()
+    return data
+  }
 }
