@@ -25,7 +25,10 @@ extension BitriseClient {
 
 extension BitriseClient {
   public func triggerWorkflow(branch: String, workflowId: String) -> BitriseTriggerResponse? {
+    // create the payload for the http call
     let payload = bitrisePayload(branch: branch, workflowId: workflowId)
+    
+    // send the request
     if let endpoint = URL(string: triggerEndpoint) {
       var request = URLRequest(url: endpoint)
       request.httpMethod = "POST"
