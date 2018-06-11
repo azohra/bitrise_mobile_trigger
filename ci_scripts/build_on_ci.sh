@@ -21,7 +21,7 @@ if [[ $PLATFORM == 'linux' ]]; then
   cp .build/release/bitriseTrigger /artifact/bitriseTrigger_linux
 COMMANDS
 else
-  swift build -c release
+  swift build --static-swift-stdlib -c release
   cp .build/release/bitriseTrigger .build/release/bitriseTrigger_osx
 fi
 echo ":> Build Complete"
