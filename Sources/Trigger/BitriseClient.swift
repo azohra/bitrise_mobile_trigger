@@ -1,5 +1,10 @@
 import Foundation
 
+enum HttpMethod: String {
+  case get = "GET"
+  case post = "POST"
+}
+
 public struct BitriseClient {
   let theAccessToken: String
   let token: String
@@ -15,11 +20,41 @@ public struct BitriseClient {
 }
 
 extension BitriseClient {
-  private func bitrisePayload(branch: String, workflowId: String) -> [String: [String: String]] {
-    return [
+  private func bitrisePayload(branch: String, workflowId: String) -> Data {
+    let payload = [
       "hook_info": ["type": "bitrise", "api_token": token],
       "build_params": ["branch": branch, "workflow_id": workflowId, "triggered_by": "CI"]
     ]
+    let encoder = JSONEncoder()
+    guard let payloadData = try? encoder.encode(payload) else {
+      print(":!ERROR - could not convert payload dictionary to json string.")
+      exit(1)
+    }
+    return payloadData
+  }
+  
+  private func httpRequest(url: String, method: HttpMethod, headers: [String: String], body: Data?) -> URLRequest {
+    guard let endpoint = URL(string: url) else {
+      print(":!ERROR - \(url) could not be converted to proper URL")
+      exit(1)
+    }
+    var request = URLRequest(url: endpoint)
+    request.httpMethod = method.rawValue
+    request.allHTTPHeaderFields = headers
+    if let body = body { request.httpBody = body }
+    return request
+  }
+  
+  private func sendRequest(request: URLRequest) -> (Data?, URLResponse?) {
+    let config = URLSessionConfiguration.default
+    let session = URLSession(configuration: config)
+    let (responseData, response, responseError) = session.synchronousDataTask(with: request)
+    guard responseError == nil else {
+      print(responseError!)
+      exit(1)
+    }
+    
+    return (responseData, response)
   }
 }
 
@@ -28,49 +63,28 @@ extension BitriseClient {
     // create the payload for the http call
     let payload = bitrisePayload(branch: branch, workflowId: workflowId)
     
-    // send the request
-    if let endpoint = URL(string: triggerEndpoint) {
-      var request = URLRequest(url: endpoint)
-      request.httpMethod = "POST"
-      
-      let headers = ["Content-Type": "application/json"]
-      request.allHTTPHeaderFields = headers
-      
-      let encoder = JSONEncoder()
-      let jsonData = try? encoder.encode(payload)
-      
-      // ... and set our request's HTTP body
-      request.httpBody = jsonData
-      // print("jsonData: ", String(data: request.httpBody!, encoding: .utf8) ?? "no body data")
-      
-      let config = URLSessionConfiguration.default
-      let session = URLSession(configuration: config)
-      let (responseData, response, responseError) = session.synchronousDataTask(with: request)
-      guard responseError == nil else {
-        print(responseError!)
-        exit(1)
-      }
-      
-      //TODO: make use to the response
-      // print(response ?? "response returned nil")
-      
-      // APIs usually respond with the data you just sent in your POST request
-      if let data = responseData, let utf8Representation = String(data: data, encoding: .utf8) {
-        // For logging
-        // print("response: ", utf8Representation)
-        do {
-          let decoder = JSONDecoder()
-          let res = try decoder.decode(BitriseTriggerResponse.self, from: data)
-          return res
-        } catch {
-          print(error)
-          return nil
-        }
-      } else {
-        print("no readable data received in response")
-      }
+    // build request
+    let request = httpRequest(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
+    
+    // send request => (responseData, response)
+    let (responseData, _) = sendRequest(request: request)
+    
+    // TODO: log response
+    
+    // APIs usually respond with the data you just sent in your POST request
+    guard let data = responseData, let _ = String(data: data, encoding: .utf8) else {
+      print("no readable data received in response")
+      return nil
     }
-    return nil
+    
+    do {
+      let decoder = JSONDecoder()
+      let res = try decoder.decode(BitriseTriggerResponse.self, from: data)
+      return res
+    } catch {
+      print(error)
+      return nil
+    }
   }
   
   // Documented at: https://devcenter.bitrise.io/api/v0.1/#get-appsapp-slugbuildsbuild-slug
