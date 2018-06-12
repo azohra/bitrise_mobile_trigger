@@ -6,7 +6,7 @@ public struct BitriseBuildResponse: Codable {
 
 public struct BuildData: Codable {
   public let triggeredAt: String
-  public let startedOnWorkerAt: String
+  public let startedOnWorkerAt: String?
   // public let environment_prepare_finished_at: String
   // public let finished_at: String
   public let slug: String
