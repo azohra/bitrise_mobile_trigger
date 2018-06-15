@@ -99,7 +99,7 @@ extension BitriseClient {
     // TODO: log response
     
     // APIs usually respond with the data you just sent in your POST request
-    guard let data = responseData, let _ = String(data: data, encoding: .utf8) else {
+    guard let data = responseData, String(data: data, encoding: .utf8) != nil else {
       print("no readable data received in response")
       return nil
     }
@@ -141,7 +141,7 @@ extension BitriseClient {
       }
       
       // APIs usually respond with the data you just sent in your GET request
-      if let data = responseData, let utf8Representation = String(data: data, encoding: .utf8) {
+      if let data = responseData, String(data: data, encoding: .utf8) != nil {
         // For logging
         // print("response: ", utf8Representation)
         
@@ -191,7 +191,7 @@ extension BitriseClient {
       }
       
       // APIs usually respond with the data you just sent in your GET request
-      if let data = responseData, let utf8Representation = String(data: data, encoding: .utf8) {
+      if let data = responseData, String(data: data, encoding: .utf8) != nil {
         // For logging
         // print("response: ", utf8Representation)
         

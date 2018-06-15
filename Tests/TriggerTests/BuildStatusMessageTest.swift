@@ -11,7 +11,9 @@ class BuildStatusMessage: XCTestCase {
   private let successMsg = "Build finished, with success"
   private let errorMsg = "Build finished, with error"
   private let abortMsg = "Build was aborted"
-  private let strangeThingOccurredMsg = "Build status did not match any of the values 0, 1, 2 or 3.\n This is very strange!"
+  private let strangeThingOccurredMsg = """
+  Build status did not match any of the values 0, 1, 2 or 3.\n This is very strange!
+  """
   private var bitriseClient: BitriseClient?
   
   private func getBitriseClient() -> BitriseClient {
