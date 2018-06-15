@@ -19,6 +19,7 @@ parser.option(
     "CONFIG_PATH",
     "Absolute path of to configuration file."
 )
+parser.option("-e", "--env", "ENVIRONMENT VARIABLE VALUE", "Value of environment variables. e.g. key1:value1,key2:value2")
 
 parser.helpFlag("-h", "--help", "Prints this help message")
 parser.flag("-V", "--version", "Version of cli running.", standAlone: true)
@@ -62,7 +63,7 @@ let bitriseClient = BitriseClient(projectConfig: projectConfig)
 // --------------------------------------------------------------------------------------------
 // hit bitrise api to trigger the build and parse response
 if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? String {
-  let triggerResponse = bitriseClient.triggerWorkflow(branch: branch, workflowId: workflowId)
+  let triggerResponse = bitriseClient.triggerWorkflow(branch: branch, workflowId: workflowId, envs: cliMap["-e"] as? String)
 
   if triggerResponse?.status != "ok" {
     print(":> API call to trigger Bitrise did NOT return with `ok` status. Trigger failed.")

@@ -20,17 +20,38 @@ public struct BitriseClient {
 }
 
 extension BitriseClient {
-  private func bitrisePayload(branch: String, workflowId: String) -> Data {
-    let payload = [
-      "hook_info": ["type": "bitrise", "api_token": token],
-      "build_params": ["branch": branch, "workflow_id": workflowId, "triggered_by": "CI"]
-    ]
-    let encoder = JSONEncoder()
-    guard let payloadData = try? encoder.encode(payload) else {
-      print(":!ERROR - could not convert payload dictionary to json string.")
+  private func bitrisePayload(branch: String, workflowId: String, envs: String?) throws -> Data {
+    let payload = """
+      {"hook_info": {"type": "bitrise", "api_token": "\(token)"},
+      "build_params": {"branch": "\(branch)", "workflow_id": "\(workflowId)", "triggered_by": "CI", \(convertToEnvHash(from: envs))}}
+      """
+    
+    guard let stringData = payload.data(using: .utf8) else {
+      print(":!ERROR - Payload json string did not convert to data.")
       exit(1)
     }
-    return payloadData
+    
+    let jsonObject = try JSONSerialization.jsonObject(with: stringData, options: .mutableContainers)
+    
+    return try JSONSerialization.data(withJSONObject: jsonObject)
+  }
+  
+  private func convertToEnvHash(from envStr: String?) -> String {
+    guard let envStr = envStr else { return "" }
+    
+    let keyValuePairs: [(String, String)] = envStr.components(separatedBy: ",").map {
+      let arr = $0.components(separatedBy: ":")
+      return (arr[0], arr[1])
+    }
+    var asJson: [String] = []
+    
+    for (key, value) in keyValuePairs {
+      asJson.append("""
+        {"mapped_to": "\(key)", "value": "\(value)", "is_expand": true}
+      """)
+    }
+    
+    return "\"environments\": [\(asJson.joined(separator: ",").trimmingCharacters(in: .whitespaces))]"
   }
   
   private func httpRequest(url: String, method: HttpMethod, headers: [String: String], body: Data?) -> URLRequest {
@@ -59,9 +80,15 @@ extension BitriseClient {
 }
 
 extension BitriseClient {
-  public func triggerWorkflow(branch: String, workflowId: String) -> BitriseTriggerResponse? {
+  public func triggerWorkflow(branch: String, workflowId: String, envs: String?) -> BitriseTriggerResponse? {
     // create the payload for the http call
-    let payload = bitrisePayload(branch: branch, workflowId: workflowId)
+    var payload: Data
+    do {
+      payload = try bitrisePayload(branch: branch, workflowId: workflowId, envs: envs)
+    } catch {
+      print(":!ERROR - ", error)
+      exit(1)
+    }
     
     // build request
     let request = httpRequest(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
@@ -188,7 +215,7 @@ extension BitriseClient {
   }
   
   // No special headers should be added for the request to the expiring_raw_log_url.
-  //See http://devcenter.bitrise.io/api/v0.1/#get-appsapp-slugbuildsbuild-sluglog
+  // See http://devcenter.bitrise.io/api/v0.1/#get-appsapp-slugbuildsbuild-sluglog
   public func getLogs(from logInfo: BitriseLogInfoResponse) -> String? {
     if let url = logInfo.expiringRawLogURL {
       if let endpoint = URL(string: url) {
