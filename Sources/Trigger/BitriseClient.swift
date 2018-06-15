@@ -39,16 +39,11 @@ extension BitriseClient {
   private func convertToEnvHash(from envStr: String?) -> String {
     guard let envStr = envStr else { return "" }
     
-    let keyValuePairs: [(String, String)] = envStr.components(separatedBy: ",").map {
+    let asJson: [String] = envStr.components(separatedBy: ",").map {
       let arr = $0.components(separatedBy: ":")
-      return (arr[0], arr[1])
-    }
-    var asJson: [String] = []
-    
-    for (key, value) in keyValuePairs {
-      asJson.append("""
-        {"mapped_to": "\(key)", "value": "\(value)", "is_expand": true}
-      """)
+      return """
+      {"mapped_to": "\(arr[0])", "value": "\(arr[1])", "is_expand": true}
+      """
     }
     
     return "\"environments\": [\(asJson.joined(separator: ",").trimmingCharacters(in: .whitespaces))]"
