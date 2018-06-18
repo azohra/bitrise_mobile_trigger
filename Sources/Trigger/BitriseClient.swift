@@ -1,79 +1,8 @@
 import Foundation
 
-public struct BitriseTriggerResponse: Codable {
-  public let status: String
-  public let message: String
-  public let slug: String
-  public let service: String
-  public let buildSlug: String
-  public let buildNumber: Int
-  public let buildURL: String
-  public let triggeredWorkflow: String
-  
-  enum CodingKeys: String, CodingKey {
-    case status, message, slug, service
-    case buildSlug = "build_slug"
-    case buildNumber = "build_number"
-    case buildURL = "build_url"
-    case triggeredWorkflow = "triggered_workflow"
-  }
-}
-
-public struct BuildParam: Codable {
-  let workflowId: String
-  let branch: String
-  
-  enum CodingKeys: String, CodingKey {
-    case branch
-    case workflowId = "workflow_id"
-  }
-}
-
-public struct BuildData: Codable {
-  public let triggeredAt: String
-  public let startedOnWorkerAt: String?
-  // public let environment_prepare_finished_at: String
-  // public let finished_at: String
-  public let slug: String
-  public let status: Int
-  public let statusText: String
-  // public let abort_reason: String
-  public let isOnHold: Bool
-  public let branch: String
-  public let buildNumber: Int
-  // public let commit_hash: String
-  // public let commit_message: String
-  // public let tag: String
-  public let triggeredWorkflow: String
-  // public let triggered_by: String
-  // public let stack_config_type: String
-  public let stackIdentifier: String
-  // public let original_build_params: [String:String]
-  
-  enum CodingKeys: String, CodingKey {
-    case status, branch, slug
-    case buildNumber = "build_number"
-    case triggeredAt = "triggered_at"
-    case startedOnWorkerAt = "started_on_worker_at"
-    case statusText = "status_text"
-    case triggeredWorkflow = "triggered_workflow"
-    case stackIdentifier = "stack_identifier"
-    case isOnHold = "is_on_hold"
-  }
-}
-
-public struct BitriseBuildResponse: Codable {
-  public let data: BuildData
-}
-
-public struct BitriseLogInfoResponse: Codable {
-  public let isArchived: Bool
-  public let expiringRawLogURL: String?
-  
-  enum CodingKeys: String, CodingKey {
-    case isArchived = "is_archived"
-    case expiringRawLogURL = "expiring_raw_log_url"
-  }
+enum HttpMethod: String {
+  case get = "GET"
+  case post = "POST"
 }
 
 public struct BitriseClient {
@@ -91,59 +20,93 @@ public struct BitriseClient {
 }
 
 extension BitriseClient {
-  private func bitrisePayload(branch: String, workflowId: String) -> [String: [String: String]] {
-    return [
-      "hook_info": ["type": "bitrise", "api_token": token],
-      "build_params": ["branch": branch, "workflow_id": workflowId, "triggered_by": "CI"]
-    ]
+  private func bitrisePayload(branch: String, workflowId: String, envs: String?) throws -> Data {
+    let payload = """
+      {"hook_info": {"type": "bitrise", "api_token": "\(token)"},
+      "build_params": {"branch": "\(branch)", "workflow_id": "\(workflowId)", "triggered_by": "CI", \(convertToEnvHash(from: envs))}}
+      """
+    
+    guard let stringData = payload.data(using: .utf8) else {
+      print(":!ERROR - Payload json string did not convert to data.")
+      exit(1)
+    }
+    
+    let jsonObject = try JSONSerialization.jsonObject(with: stringData, options: .mutableContainers)
+    
+    return try JSONSerialization.data(withJSONObject: jsonObject)
+  }
+  
+  private func convertToEnvHash(from envStr: String?) -> String {
+    guard let envStr = envStr else { return "" }
+    
+    let asJson: [String] = envStr.components(separatedBy: ",").map {
+      let arr = $0.components(separatedBy: ":")
+      return """
+      {"mapped_to": "\(arr[0])", "value": "\(arr[1])", "is_expand": true}
+      """
+    }
+    
+    return "\"environments\": [\(asJson.joined(separator: ",").trimmingCharacters(in: .whitespaces))]"
+  }
+  
+  private func httpRequest(url: String, method: HttpMethod, headers: [String: String], body: Data?) -> URLRequest {
+    guard let endpoint = URL(string: url) else {
+      print(":!ERROR - \(url) could not be converted to proper URL")
+      exit(1)
+    }
+    var request = URLRequest(url: endpoint)
+    request.httpMethod = method.rawValue
+    request.allHTTPHeaderFields = headers
+    if let body = body { request.httpBody = body }
+    return request
+  }
+  
+  private func sendRequest(request: URLRequest) -> (Data?, URLResponse?) {
+    let config = URLSessionConfiguration.default
+    let session = URLSession(configuration: config)
+    let (responseData, response, responseError) = session.synchronousDataTask(with: request)
+    guard responseError == nil else {
+      print(responseError!)
+      exit(1)
+    }
+    
+    return (responseData, response)
   }
 }
 
 extension BitriseClient {
-  public func triggerWorkflow(branch: String, workflowId: String) -> BitriseTriggerResponse? {
-    let payload = bitrisePayload(branch: branch, workflowId: workflowId)
-    if let endpoint = URL(string: triggerEndpoint) {
-      var request = URLRequest(url: endpoint)
-      request.httpMethod = "POST"
-      
-      let headers = ["Content-Type": "application/json"]
-      request.allHTTPHeaderFields = headers
-      
-      let encoder = JSONEncoder()
-      let jsonData = try? encoder.encode(payload)
-      
-      // ... and set our request's HTTP body
-      request.httpBody = jsonData
-      // print("jsonData: ", String(data: request.httpBody!, encoding: .utf8) ?? "no body data")
-      
-      let config = URLSessionConfiguration.default
-      let session = URLSession(configuration: config)
-      let (responseData, response, responseError) = session.synchronousDataTask(with: request)
-      guard responseError == nil else {
-        print(responseError!)
-        exit(1)
-      }
-      
-      //TODO: make use to the response
-      // print(response ?? "response returned nil")
-      
-      // APIs usually respond with the data you just sent in your POST request
-      if let data = responseData, let utf8Representation = String(data: data, encoding: .utf8) {
-        // For logging
-        // print("response: ", utf8Representation)
-        do {
-          let decoder = JSONDecoder()
-          let res = try decoder.decode(BitriseTriggerResponse.self, from: data)
-          return res
-        } catch {
-          print(error)
-          return nil
-        }
-      } else {
-        print("no readable data received in response")
-      }
+  public func triggerWorkflow(branch: String, workflowId: String, envs: String?) -> BitriseTriggerResponse? {
+    // create the payload for the http call
+    var payload: Data
+    do {
+      payload = try bitrisePayload(branch: branch, workflowId: workflowId, envs: envs)
+    } catch {
+      print(":!ERROR - ", error)
+      exit(1)
     }
-    return nil
+    
+    // build request
+    let request = httpRequest(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
+    
+    // send request => (responseData, response)
+    let (responseData, _) = sendRequest(request: request)
+    
+    // TODO: log response
+    
+    // APIs usually respond with the data you just sent in your POST request
+    guard let data = responseData, String(data: data, encoding: .utf8) != nil else {
+      print("no readable data received in response")
+      return nil
+    }
+    
+    do {
+      let decoder = JSONDecoder()
+      let res = try decoder.decode(BitriseTriggerResponse.self, from: data)
+      return res
+    } catch {
+      print(error)
+      return nil
+    }
   }
   
   // Documented at: https://devcenter.bitrise.io/api/v0.1/#get-appsapp-slugbuildsbuild-slug
@@ -173,7 +136,7 @@ extension BitriseClient {
       }
       
       // APIs usually respond with the data you just sent in your GET request
-      if let data = responseData, let utf8Representation = String(data: data, encoding: .utf8) {
+      if let data = responseData, String(data: data, encoding: .utf8) != nil {
         // For logging
         // print("response: ", utf8Representation)
         
@@ -223,7 +186,7 @@ extension BitriseClient {
       }
       
       // APIs usually respond with the data you just sent in your GET request
-      if let data = responseData, let utf8Representation = String(data: data, encoding: .utf8) {
+      if let data = responseData, String(data: data, encoding: .utf8) != nil {
         // For logging
         // print("response: ", utf8Representation)
         
@@ -247,7 +210,7 @@ extension BitriseClient {
   }
   
   // No special headers should be added for the request to the expiring_raw_log_url.
-  //See http://devcenter.bitrise.io/api/v0.1/#get-appsapp-slugbuildsbuild-sluglog
+  // See http://devcenter.bitrise.io/api/v0.1/#get-appsapp-slugbuildsbuild-sluglog
   public func getLogs(from logInfo: BitriseLogInfoResponse) -> String? {
     if let url = logInfo.expiringRawLogURL {
       if let endpoint = URL(string: url) {
