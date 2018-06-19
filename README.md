@@ -20,6 +20,7 @@ Usage: bitriseTrigger [flag] [options]
 -w --workflow-id WORKFLOW_ID - Bitrise workflow id.
 -b --branch      BRANCH_NAME - Name of the branch to be built.
 -c --config      CONFIG_PATH - Absolute path of to configuration file.
+-e --env         ENVIRONMENT_VARIABLE:VALUE - List of environment variables to be passed e.g. key1:value1,key2:value2
 
 -h --help  - Prints this help message
 ```
