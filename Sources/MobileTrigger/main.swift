@@ -19,7 +19,7 @@ parser.option(
     "CONFIG_PATH",
     "Absolute path of to configuration file."
 )
-parser.option("-e", "--env", "ENVIRONMENT_VARIABLE:VALUE", "list of environment variables to be passed e.g. key1:value1,key2:value2")
+parser.option("-e", "--env", "ENVIRONMENT_VARIABLE:VALUE", "List of environment variables to be passed e.g. key1:value1,key2:value2")
 
 parser.helpFlag("-h", "--help", "Prints this help message")
 parser.flag("-V", "--version", "Version of cli running.", standAlone: true)
