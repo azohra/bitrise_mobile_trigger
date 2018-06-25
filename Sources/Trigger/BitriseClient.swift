@@ -40,7 +40,7 @@ extension BitriseClient {
     guard let envStr = envStr else { return "" }
     
     let asJson: [String] = envStr.components(separatedBy: ",").map {
-      let arr = $0.components(separatedBy: ":")
+      let arr = $0.components(separatedBy: "=")
       return """
       {"mapped_to": "\(arr[0])", "value": "\(arr[1])", "is_expand": true}
       """
