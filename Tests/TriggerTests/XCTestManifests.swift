@@ -3,8 +3,9 @@ import XCTest
 #if os(Linux)
 public func allTests() -> [XCTestCaseEntry] {
     return [
-        testCase(BuildStatusMessage.allTests),
-        testCase(Configuration.allTests)
+        testCase(BuildStatusMessageTest.allTests),
+        testCase(ConfigurationTest.allTests),
+        testCase(BitrisePayloadTest.allTests)
     ]
 }
 #endif

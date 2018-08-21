@@ -1,7 +1,7 @@
 import XCTest
 @testable import Trigger
 
-class BuildStatusMessage: XCTestCase {
+class BuildStatusMessageTest: XCTestCase {
   override class func setUp() {
     let testObserver = TestObserver()
     XCTestObservationCenter.shared.addTestObserver(testObserver)

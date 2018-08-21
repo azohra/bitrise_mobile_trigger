@@ -1,7 +1,7 @@
 import XCTest
 @testable import Trigger
 
-class Configuration: XCTestCase {
+class ConfigurationTest: XCTestCase {
   override func setUp() {
     continueAfterFailure = true
   }
@@ -11,7 +11,7 @@ class Configuration: XCTestCase {
       print(error)
     }
   }
-
+    
   func testValidJsonToObject() {
     let validJson = """
     {
@@ -23,7 +23,7 @@ class Configuration: XCTestCase {
     }
     """
     let json: Data = validJson.data(using: String.Encoding.utf8)!
-    guard let projectConfig = try? Config(with: json) else { 
+    guard let projectConfig = try? Config(with: json) else {
       XCTAssert(false, "An error was thrown when try to great a Config instance.")
       return
     }
