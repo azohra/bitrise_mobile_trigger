@@ -83,7 +83,6 @@ class ConfigurationTest: XCTestCase {
     }
     """.data(using: String.Encoding.utf8)!
     
-//    is the error because slug in Config is not an optional field. Did we not make it optional because we have to have it and it cannot be nil?
     XCTAssertThrowsError(try Config(with: missingKeys)) { (error) -> Void in
       print(":> ERROR CAUGHT: \(error)")
     }
