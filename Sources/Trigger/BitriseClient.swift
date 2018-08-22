@@ -22,7 +22,12 @@ public struct BitriseClient {
 extension BitriseClient {
   private func bitrisePayload(branch: String, workflowId: String, envs: String?) throws -> Data {
     let hookInfo = HookInformation(type: "bitrise", apiToken: token)
-    let buildParams = BuildParams(branch: branch, workflowID: workflowId, triggeredBy: "CI", environments: convertToEnvArray(from: envs))
+    let buildParams = BuildParams(
+        branch: branch,
+        workflowID: workflowId,
+        triggeredBy: "CI",
+        environments: convertToEnvArray(from: envs)
+        )
     let payload = BitrisePayload(apiInfo: hookInfo, params: buildParams)
     let encoder = JSONEncoder()
     let data = try encoder.encode(payload)
@@ -31,10 +36,10 @@ extension BitriseClient {
     return data
   }
   
-    private func convertToEnvArray(from envStr: String?) -> [[String:String]] {
+    private func convertToEnvArray(from envStr: String?) -> [[String: String]] {
     guard let envStr = envStr else { return [] }
     
-      let envArray: [[String:String]] = envStr.components(separatedBy: ",").map {
+      let envArray: [[String: String]] = envStr.components(separatedBy: ",").map {
         let arr = $0.components(separatedBy: ":")
         return ["mapped_to": "\(arr[0])", "value": "\(arr[1])", "is_expand": "true"]
       }
@@ -78,7 +83,11 @@ extension BitriseClient {
     }
     
     // build request
-    let request = httpRequest(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
+    let request = httpRequest(
+        url: triggerEndpoint,
+        method: .post,
+        headers: ["Content-Type": "application/json"],
+        body: payload)
     
     // send request => (responseData, response)
     let (responseData, _) = sendRequest(request: request)

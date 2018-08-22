@@ -39,4 +39,3 @@ struct BuildParams: Codable {
       case triggeredBy = "triggered_by"
     }
 }
-
