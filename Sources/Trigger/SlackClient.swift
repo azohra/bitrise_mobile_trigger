@@ -47,7 +47,7 @@ extension SlackClient {
       // ... and set our request's HTTP body
       request.httpBody = jsonData
       // print("jsonData: ", String(data: request.httpBody!, encoding: .utf8) ?? "no body data")
-      
+        
       let config = URLSessionConfiguration.default
       let session = URLSession(configuration: config)
       let (_, response, responseError) = session.synchronousDataTask(with: request)
