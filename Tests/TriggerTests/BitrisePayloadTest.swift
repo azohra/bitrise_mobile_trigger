@@ -26,8 +26,15 @@ class BitrisePayloadTest: XCTestCase {
                 "value": "$HOME variable contains user's home directory path",
                 "is_expand": "false"
             ]])
-        let expectedJSON = "{\"hook_info\":{\"type\":\"bitrise\",\"api_token\":\"AVCTRE$3258gyt65\"},\"build_params\":{\"workflow_id\":\"XcodeForever\",\"environments\":[{\"value\":\"This is the test value\",\"mapped_to\":\"API_TEST_ENV\",\"is_expand\":\"true\"},{\"value\":\"$HOME variable contains user\'s home directory path\",\"mapped_to\":\"HELP_ENV\",\"is_expand\":\"false\"}],\"triggered_by\":\"CI\",\"branch\":\"azi_branch\"}}"
-        
+      
+        let hookInfoStr = "\"hook_info\":{\"type\":\"bitrise\",\"api_token\":\"AVCTRE$3258gyt65\"}"
+        let triggeredByStr = "\"triggered_by\":\"CI\""
+        let branchStr = "\"branch\":\"azi_branch\""
+        let workflowIdStr = "\"workflow_id\":\"XcodeForever\""
+        let envVarsStr = "\"environments\":[{\"value\":\"This is the test value\",\"mapped_to\":\"API_TEST_ENV\",\"is_expand\":\"true\"},{\"value\":\"$HOME variable contains user\'s home directory path\",\"mapped_to\":\"HELP_ENV\",\"is_expand\":\"false\"}]"
+        let buildParamsStr = "\"build_params\":{\(workflowIdStr),\(envVarsStr),\(triggeredByStr),\(branchStr)}"
+        let expectedJSON = "{\(hookInfoStr),\(buildParamsStr)}"
+      
         let payload = BitrisePayload(apiInfo: hookInfo, params: buildParams)
         let encoder = JSONEncoder()
         
