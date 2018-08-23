@@ -41,7 +41,8 @@ class BitrisePayloadTest: XCTestCase {
         do {
         let data = try encoder.encode(payload)
             let result = String(data: data, encoding: .utf8)!
-            XCTAssert(result == expectedJSON, "result JSON string is not the same as the expected JSON ")
+            let errorMsg = "result JSON string is not the same as the expected JSON.\nresult: \(result)\nexpectedJSON: \(expectedJSON)"
+            XCTAssert(result == expectedJSON, errorMsg)
         } catch {
             XCTAssert(false, "\(error)")
         }
