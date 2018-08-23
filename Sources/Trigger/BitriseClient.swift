@@ -5,7 +5,18 @@ enum HttpMethod: String {
   case post = "POST"
 }
 
+protocol BitriseClientDelegate {
+    
+    var url: String { get }
+    var method: HttpMethod { get }
+    var headers: [String : String] { get }
+    var body: Data? { get }
+    
+    mutating func generateHttpRequest() -> URLRequest
+}
+
 public struct BitriseClient {
+  var delegate: BitriseClientDelegate?
   let theAccessToken: String
   let token: String
   let slug: String
@@ -49,17 +60,17 @@ extension BitriseClient {
     return "\"environments\": [\(asJson.joined(separator: ",").trimmingCharacters(in: .whitespaces))]"
   }
   
-  private func httpRequest(url: String, method: HttpMethod, headers: [String: String], body: Data?) -> URLRequest {
-    guard let endpoint = URL(string: url) else {
-      print(":!ERROR - \(url) could not be converted to proper URL")
-      exit(1)
-    }
-    var request = URLRequest(url: endpoint)
-    request.httpMethod = method.rawValue
-    request.allHTTPHeaderFields = headers
-    if let body = body { request.httpBody = body }
-    return request
-  }
+//  private func httpRequest(url: String, method: HttpMethod, headers: [String: String], body: Data?) -> URLRequest {
+//    guard let endpoint = URL(string: url) else {
+//      print(":!ERROR - \(url) could not be converted to proper URL")
+//      exit(1)
+//    }
+//    var request = URLRequest(url: endpoint)
+//    request.httpMethod = method.rawValue
+//    request.allHTTPHeaderFields = headers
+//    if let body = body { request.httpBody = body }
+//    return request
+//  }
   
   private func sendRequest(request: URLRequest) -> (Data?, URLResponse?) {
     let config = URLSessionConfiguration.default
@@ -75,7 +86,7 @@ extension BitriseClient {
 }
 
 extension BitriseClient {
-  public func triggerWorkflow(branch: String, workflowId: String, envs: String?) -> BitriseTriggerResponse? {
+  public mutating func triggerWorkflow(branch: String, workflowId: String, envs: String?) -> BitriseTriggerResponse? {
     // create the payload for the http call
     var payload: Data
     do {
@@ -86,8 +97,12 @@ extension BitriseClient {
     }
     
     // build request
-    let request = httpRequest(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
-    
+//    let request = httpRequest(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
+    self.delegate = RequestEngine(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
+    guard let request = delegate?.generateHttpRequest() else {
+        print("delegate is not set properly")
+        exit(1)
+    }
     // send request => (responseData, response)
     let (responseData, _) = sendRequest(request: request)
     
