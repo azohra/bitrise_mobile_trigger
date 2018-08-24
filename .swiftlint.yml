@@ -1,4 +1,8 @@
 disabled_rules:
   - trailing_whitespace
+  - todo
 
 large_tuple: 3
+line_length:
+  - 120
+  - 300
