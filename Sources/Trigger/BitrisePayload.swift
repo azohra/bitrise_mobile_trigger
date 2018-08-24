@@ -1,10 +1,3 @@
-//
-//  BitrisePayload.swift
-//  MobileTriggerPackageDescription
-//
-//  Created by Azadeh Bagheri (LCL) on 8/20/18.
-//
-
 import Foundation
 
 struct BitrisePayload: Codable {
