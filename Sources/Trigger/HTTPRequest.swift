@@ -1,10 +1,10 @@
 import Foundation
-struct RequestGenerator: HttpRequestEngine {
+struct HTTPRequest: HttpRequestEngine {
     
     var url: String
     var method: HttpMethod
     var headers: [String : String]
-    var body: Data?
+    var body: Data? = nil
     
     mutating func generateRequest() -> URLRequest {
         guard let endpoint = URL(string: url) else {

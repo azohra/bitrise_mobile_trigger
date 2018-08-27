@@ -85,7 +85,7 @@ extension BitriseClient {
     
     // build request
     //    let request = httpRequest(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
-     delegate = RequestGenerator(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
+     delegate = HTTPRequest(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
     
     guard let request = delegate?.generateRequest() else {
         print("delegate is not set properly")
@@ -115,13 +115,14 @@ extension BitriseClient {
   
   // Documented at: https://devcenter.bitrise.io/api/v0.1/#get-appsapp-slugbuildsbuild-slug
   public func checkBuildStatus(slug buildSlug: String) -> BitriseBuildResponse? {
-    if let endpoint = URL(string: "https://api.bitrise.io/v0.1/apps/\(slug)/builds/\(buildSlug)") {
-      var request = URLRequest(url: endpoint)
-      request.httpMethod = "GET"
-      
+//    if let endpoint = URL(string: "https://api.bitrise.io/v0.1/apps/\(slug)/builds/\(buildSlug)") {
+//      var request = URLRequest(url: endpoint)
+//      request.httpMethod = "GET"
+      let endpoint = "https://api.bitrise.io/v0.1/apps/\(slug)/builds/\(buildSlug)"
       let headers = ["Content-Type": "application/json", "Authorization": theAccessToken]
-      request.allHTTPHeaderFields = headers
-      
+//      request.allHTTPHeaderFields = headers
+      var delegate = HTTPRequest(url: endpoint, method: .get, headers: headers, body: nil)
+      let request = delegate.generateRequest()
       let config = URLSessionConfiguration.default
       let session = URLSession(configuration: config)
       let (responseData, response, responseError) = session.synchronousDataTask(with: request)
@@ -157,10 +158,10 @@ extension BitriseClient {
         return nil
       }
       
-    } else {
-      print(":!ERROR - Cannot convert the URL string to a URL object")
-      return nil
-    }
+//    } else {
+//      print(":!ERROR - Cannot convert the URL string to a URL object")
+//      return nil
+//    }
   }
   
   // Documented at http://devcenter.bitrise.io/api/v0.1/#get-appsapp-slugbuildsbuild-sluglog
@@ -284,5 +285,6 @@ extension BitriseClient {
     self.slug = "fake_slug_4243534"
     self.triggerEndpoint = "https://dummy.app.bitrise.io/app/\(slug)/build/start.json"
   }
+
 }
 // #endif

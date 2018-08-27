@@ -1,7 +1,7 @@
 import XCTest
 @testable import Trigger
 
-class RequestGeneratorTest: XCTestCase {
+class HTTPRequestTest: XCTestCase {
     
     override func setUp() {
         continueAfterFailure = true
