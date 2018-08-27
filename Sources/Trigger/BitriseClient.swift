@@ -5,15 +5,7 @@ enum HttpMethod: String {
   case post = "POST"
 }
 
-protocol BitriseClientDelegate {
-    
-    var url: String { get }
-    var method: HttpMethod { get }
-    var headers: [String : String] { get }
-    var body: Data? { get }
-    
-    mutating func generateHttpRequest() -> URLRequest
-}
+
 
 public struct BitriseClient {
   var delegate: BitriseClientDelegate?
