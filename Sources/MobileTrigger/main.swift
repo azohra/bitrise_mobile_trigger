@@ -58,7 +58,7 @@ do {
 }
 
 // create bitrise client object
-let bitriseClient = BitriseClient(projectConfig: projectConfig)
+var bitriseClient = BitriseClient(projectConfig: projectConfig)
 
 // --------------------------------------------------------------------------------------------
 // using input data

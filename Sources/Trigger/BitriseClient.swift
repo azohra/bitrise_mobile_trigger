@@ -87,16 +87,10 @@ extension BitriseClient {
     //    let request = httpRequest(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
      delegate = RequestGenerator(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
     
-    guard let request = delegate?.generateHttpRequest() else {
+    guard let request = delegate?.generateRequest() else {
         print("delegate is not set properly")
         return nil
     }
-    
-//    let request = httpRequest(
-//        url: triggerEndpoint,
-//        method: .post,
-//        headers: ["Content-Type": "application/json"],
-//        body: payload)
     
     // send request => (responseData, response)
     let (responseData, _) = sendRequest(request: request)
