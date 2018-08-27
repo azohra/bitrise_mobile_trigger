@@ -5,10 +5,8 @@ enum HttpMethod: String {
   case post = "POST"
 }
 
-
-
 public struct BitriseClient {
-  var delegate: BitriseClientDelegate?
+  var delegate: HttpRequestEngine?
   let theAccessToken: String
   let token: String
   let slug: String
@@ -24,33 +22,30 @@ public struct BitriseClient {
 
 extension BitriseClient {
   private func bitrisePayload(branch: String, workflowId: String, envs: String?) throws -> Data {
-    let payload = """
-      {"hook_info": {"type": "bitrise", "api_token": "\(token)"},
-      "build_params": {"branch": "\(branch)", "workflow_id": "\(workflowId)", "triggered_by": "CI", \(convertToEnvHash(from: envs))}}
-      """
-    
-    guard let stringData = payload.data(using: .utf8) else {
-      print(":!ERROR - Payload json string did not convert to data.")
-      exit(1)
-    }
-    
-    let jsonObject = try JSONSerialization.jsonObject(with: stringData, options: .mutableContainers)
-    
-    return try JSONSerialization.data(withJSONObject: jsonObject)
+    let hookInfo = HookInformation(type: "bitrise", apiToken: token)
+    let buildParams = BuildParams(
+        branch: branch,
+        workflowID: workflowId,
+        triggeredBy: "CI",
+        environments: convertToEnvArray(from: envs)
+        )
+    let payload = BitrisePayload(apiInfo: hookInfo, params: buildParams)
+    let encoder = JSONEncoder()
+    let data = try encoder.encode(payload)
+//    For logging
+//    let _ = String(data: data, encoding: .utf8)!
+    return data
   }
   
-  private func convertToEnvHash(from envStr: String?) -> String {
-    guard let envStr = envStr else { return "" }
+    private func convertToEnvArray(from envStr: String?) -> [[String: String]] {
+    guard let envStr = envStr else { return [] }
     
-    let asJson: [String] = envStr.components(separatedBy: ",").map {
-      let arr = $0.components(separatedBy: "=")
-      return """
-      {"mapped_to": "\(arr[0])", "value": "\(arr[1])", "is_expand": true}
-      """
+      let envArray: [[String: String]] = envStr.components(separatedBy: ",").map {
+        let arr = $0.components(separatedBy: ":")
+        return ["mapped_to": "\(arr[0])", "value": "\(arr[1])", "is_expand": "true"]
+      }
+      return envArray
     }
-    
-    return "\"environments\": [\(asJson.joined(separator: ",").trimmingCharacters(in: .whitespaces))]"
-  }
   
 //  private func httpRequest(url: String, method: HttpMethod, headers: [String: String], body: Data?) -> URLRequest {
 //    guard let endpoint = URL(string: url) else {
@@ -89,12 +84,20 @@ extension BitriseClient {
     }
     
     // build request
-//    let request = httpRequest(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
-    self.delegate = RequestEngine(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
+    //    let request = httpRequest(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
+     delegate = RequestGenerator(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
+    
     guard let request = delegate?.generateHttpRequest() else {
         print("delegate is not set properly")
-        exit(1)
+        return nil
     }
+    
+//    let request = httpRequest(
+//        url: triggerEndpoint,
+//        method: .post,
+//        headers: ["Content-Type": "application/json"],
+//        body: payload)
+    
     // send request => (responseData, response)
     let (responseData, _) = sendRequest(request: request)
     
@@ -161,7 +164,7 @@ extension BitriseClient {
       }
       
     } else {
-      print(":!ERROR - incorrect URL to reach Bitrise service.")
+      print(":!ERROR - Cannot convert the URL string to a URL object")
       return nil
     }
   }
