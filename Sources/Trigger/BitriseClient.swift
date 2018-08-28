@@ -46,18 +46,6 @@ extension BitriseClient {
       }
       return envArray
     }
-  
-  private func sendRequest(request: URLRequest) -> (Data?, URLResponse?) {
-    let config = URLSessionConfiguration.default
-    let session = URLSession(configuration: config)
-    let (responseData, response, responseError) = session.synchronousDataTask(with: request)
-    guard responseError == nil else {
-      print(responseError!)
-      exit(1)
-    }
-    
-    return (responseData, response)
-  }
 }
 
 extension BitriseClient {
@@ -71,21 +59,18 @@ extension BitriseClient {
       exit(1)
     }
     
-    // build request
-    //    let request = httpRequest(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
-     delegate = HTTPRequest(
-        url: triggerEndpoint,
-        method: .post,
-        headers: ["Content-Type": "application/json"],
-        body: payload)
+    // build and send the request
+    delegate = HTTPRequest(
+      url: triggerEndpoint,
+      method: .post,
+      headers: ["Content-Type": "application/json"],
+      body: payload)
     
-    guard let request = delegate?.request() else {
-        print("delegate is not set properly")
-        return nil
+    guard let request = delegate?.request(),
+    let (responseData, _) = delegate?.sendRequest(request: request) else {
+      print("delegate is not set properly")
+      return nil
     }
-    
-    // send request => (responseData, response)
-    let (responseData, _) = sendRequest(request: request)
     
     // TODO: log response
     

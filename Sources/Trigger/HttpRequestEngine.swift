@@ -7,6 +7,6 @@ protocol HttpRequestEngine {
     var headers: [String: String] { get }
     var body: Data? { get }
     
-    mutating func request() -> URLRequest
-    
+    func request() -> URLRequest
+    func sendRequest(request: URLRequest) -> (Data?, URLResponse?)
 }
