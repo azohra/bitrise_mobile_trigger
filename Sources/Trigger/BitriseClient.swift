@@ -6,6 +6,7 @@ enum HttpMethod: String {
 }
 
 public struct BitriseClient {
+  var delegate: HTTPRequestEngine?
   let theAccessToken: String
   let token: String
   let slug: String
@@ -36,43 +37,18 @@ extension BitriseClient {
     return data
   }
   
-    private func convertToEnvArray(from envStr: String?) -> [[String: String]] {
+  private func convertToEnvArray(from envStr: String?) -> [[String: String]] {
     guard let envStr = envStr else { return [] }
-    
-      let envArray: [[String: String]] = envStr.components(separatedBy: ",").map {
-        let arr = $0.components(separatedBy: ":")
-        return ["mapped_to": "\(arr[0])", "value": "\(arr[1])", "is_expand": "true"]
-      }
-      return envArray
+    let envArray: [[String: String]] = envStr.components(separatedBy: ",").map {
+      let arr = $0.components(separatedBy: ":")
+      return ["mapped_to": "\(arr[0])", "value": "\(arr[1])", "is_expand": "true"]
     }
-  
-  private func httpRequest(url: String, method: HttpMethod, headers: [String: String], body: Data?) -> URLRequest {
-    guard let endpoint = URL(string: url) else {
-      print(":!ERROR - \(url) could not be converted to proper URL")
-      exit(1)
-    }
-    var request = URLRequest(url: endpoint)
-    request.httpMethod = method.rawValue
-    request.allHTTPHeaderFields = headers
-    if let body = body { request.httpBody = body }
-    return request
-  }
-  
-  private func sendRequest(request: URLRequest) -> (Data?, URLResponse?) {
-    let config = URLSessionConfiguration.default
-    let session = URLSession(configuration: config)
-    let (responseData, response, responseError) = session.synchronousDataTask(with: request)
-    guard responseError == nil else {
-      print(responseError!)
-      exit(1)
-    }
-    
-    return (responseData, response)
+    return envArray
   }
 }
 
 extension BitriseClient {
-  public func triggerWorkflow(branch: String, workflowId: String, envs: String?) -> BitriseTriggerResponse? {
+  public mutating func triggerWorkflow(branch: String, workflowId: String, envs: String?) -> BitriseTriggerResponse? {
     // create the payload for the http call
     var payload: Data
     do {
@@ -82,15 +58,23 @@ extension BitriseClient {
       exit(1)
     }
     
-    // build request
-    let request = httpRequest(
-        url: triggerEndpoint,
-        method: .post,
-        headers: ["Content-Type": "application/json"],
-        body: payload)
+    // build and send the request
+    delegate = HTTPRequest(
+      url: triggerEndpoint,
+      method: .post,
+      headers: ["Content-Type": "application/json"],
+      body: payload)
     
-    // send request => (responseData, response)
-    let (responseData, _) = sendRequest(request: request)
+    guard let request = delegate?.request(),
+    let (responseData, _, responseError) = delegate?.sendRequest(request: request) else {
+      print("delegate is not set properly")
+      return nil
+    }
+    
+    guard responseError == nil else {
+        print(responseError!)
+        exit(1)
+    }
     
     // TODO: log response
     
@@ -111,67 +95,58 @@ extension BitriseClient {
   }
   
   // Documented at: https://devcenter.bitrise.io/api/v0.1/#get-appsapp-slugbuildsbuild-slug
-  public func checkBuildStatus(slug buildSlug: String) -> BitriseBuildResponse? {
-    if let endpoint = URL(string: "https://api.bitrise.io/v0.1/apps/\(slug)/builds/\(buildSlug)") {
-      var request = URLRequest(url: endpoint)
-      request.httpMethod = "GET"
-      
-      let headers = ["Content-Type": "application/json", "Authorization": theAccessToken]
-      request.allHTTPHeaderFields = headers
-      
-      let config = URLSessionConfiguration.default
-      let session = URLSession(configuration: config)
-      let (responseData, response, responseError) = session.synchronousDataTask(with: request)
-      
-      // TODO: CHeck guard statement
-      guard responseError == nil else {
+  public mutating func checkBuildStatus(slug buildSlug: String) -> BitriseBuildResponse? {
+    let endpoint = "https://api.bitrise.io/v0.1/apps/\(slug)/builds/\(buildSlug)"
+    let headers = ["Content-Type": "application/json", "Authorization": theAccessToken]
+    
+    delegate = HTTPRequest(url: endpoint, method: .get, headers: headers)
+    guard let request = delegate?.request(),
+    let (responseData, response, responseError) = delegate?.sendRequest(request: request) else {
+      print("delegate is not set properly")
+      return nil
+    }
+    
+    guard responseError == nil else {
         print(responseError!)
         exit(1)
-      }
-      
-      if let res = response as? HTTPURLResponse {
-        let returnCode = res.statusCode
-        if returnCode != 200 { print("Response code for checkBuildStatus was ", returnCode) }
-      } else {
+    }
+    
+    if let res = response as? HTTPURLResponse {
+      let returnCode = res.statusCode
+      if returnCode != 200 { print("Response code for checkBuildStatus was ", returnCode) }
+    } else {
         print("response returned nil")
-      }
+    }
       
       // APIs usually respond with the data you just sent in your GET request
-      if let data = responseData, String(data: data, encoding: .utf8) != nil {
+    guard let data = responseData, String(data: data, encoding: .utf8) != nil else {
+      print("no readable data received in response")
+      return nil
+    }
         // For logging
         // print("response: ", utf8Representation)
         
-        do {
-          let decoder = JSONDecoder()
-          let res = try decoder.decode(BitriseBuildResponse.self, from: data)
-          return res
-        } catch {
-          print(error)
-          return nil
-        }
-      } else {
-        print("no readable data received in response")
-        return nil
-      }
-      
-    } else {
-      print(":!ERROR - Cannot convert the URL string to a URL object")
+    do {
+      let decoder = JSONDecoder()
+      let res = try decoder.decode(BitriseBuildResponse.self, from: data)
+      return res
+    } catch {
+      print(error)
       return nil
     }
   }
   
   // Documented at http://devcenter.bitrise.io/api/v0.1/#get-appsapp-slugbuildsbuild-sluglog
-  public func getLogInfo(slug buildSlug: String) -> BitriseLogInfoResponse? {
-    if let endpoint = URL(string: "https://api.bitrise.io/v0.1/apps/\(slug)/builds/\(buildSlug)/log") {
-      var request = URLRequest(url: endpoint)
-      request.httpMethod = "GET"
-      
+    public mutating func getLogInfo(slug buildSlug: String) -> BitriseLogInfoResponse? {
+      let endpoint = "https://api.bitrise.io/v0.1/apps/\(slug)/builds/\(buildSlug)/log"
       let headers = ["Content-Type": "application/json", "Authorization": theAccessToken]
-      request.allHTTPHeaderFields = headers
-      
-      let config = URLSessionConfiguration.default
-      let session = URLSession(configuration: config)
-      let (responseData, response, responseError) = session.synchronousDataTask(with: request)
+        
+      delegate = HTTPRequest(url: endpoint, method: .get, headers: headers)
+      guard let request = delegate?.request(),
+      let (responseData, response, responseError) = delegate?.sendRequest(request: request) else {
+        print("delegate is not set properly")
+        return nil
+      }
       
       // TODO: CHeck guard statement
       guard responseError == nil else {
@@ -187,63 +162,52 @@ extension BitriseClient {
       }
       
       // APIs usually respond with the data you just sent in your GET request
-      if let data = responseData, String(data: data, encoding: .utf8) != nil {
-        // For logging
-        // print("response: ", utf8Representation)
-        
-        do {
-          let decoder = JSONDecoder()
-          let res = try decoder.decode(BitriseLogInfoResponse.self, from: data)
-          return res
-        } catch {
-          print(error)
-          return nil
-        }
-      } else {
+      guard let data = responseData, String(data: data, encoding: .utf8) != nil else {
         print("no readable data received in response")
         return nil
       }
-      
-    } else {
-      print(":!ERROR - incorrect URL to reach Bitrise service.")
-      return nil
-    }
+        // For logging
+        // print("response: ", utf8Representation)
+        
+      do {
+        let decoder = JSONDecoder()
+        let res = try decoder.decode(BitriseLogInfoResponse.self, from: data)
+        return res
+      } catch {
+        print(error)
+        return nil
+      }
   }
   
   // No special headers should be added for the request to the expiring_raw_log_url.
   // See http://devcenter.bitrise.io/api/v0.1/#get-appsapp-slugbuildsbuild-sluglog
-  public func getLogs(from logInfo: BitriseLogInfoResponse) -> String? {
+  public mutating func getLogs(from logInfo: BitriseLogInfoResponse) -> String? {
     if let url = logInfo.expiringRawLogURL {
-      if let endpoint = URL(string: url) {
-        var request = URLRequest(url: endpoint)
-        request.httpMethod = "GET"
+      delegate = HTTPRequest(url: url, method: .get)
+      guard let request = delegate?.request(),
+      let (responseData, response, responseError) = delegate?.sendRequest(request: request) else {
+        print("delegate is not set properly")
+        return nil
+      }
         
-        let config = URLSessionConfiguration.default
-        let session = URLSession(configuration: config)
-        let (responseData, response, responseError) = session.synchronousDataTask(with: request)
+      // TODO: CHeck guard statement
+      guard responseError == nil else {
+        print(responseError!)
+        exit(1)
+      }
         
-        // TODO: CHeck guard statement
-        guard responseError == nil else {
-          print(responseError!)
-          exit(1)
-        }
-        
-        if let res = response as? HTTPURLResponse {
-          let returnCode = res.statusCode
-          if returnCode != 200 { print("Response code from GET request to raw log url endpoint was ", returnCode) }
-        } else {
-          print("response returned nil")
-        }
-        
-        // APIs usually respond with the data you just sent in your GET request
-        if let data = responseData, let utf8Representation = String(data: data, encoding: .utf8) {
-          return utf8Representation
-        } else {
-          print("no readable data received in response")
-          return nil
-        }
+      if let res = response as? HTTPURLResponse {
+        let returnCode = res.statusCode
+        if returnCode != 200 { print("Response code from GET request to raw log url endpoint was ", returnCode) }
       } else {
-        print(":!ERROR - incorrect URL to reach Bitrise service.")
+        print("response returned nil")
+      }
+        
+      // APIs usually respond with the data you just sent in your GET request
+      if let data = responseData, let utf8Representation = String(data: data, encoding: .utf8) {
+        return utf8Representation
+      } else {
+        print("no readable data received in response")
         return nil
       }
       
@@ -281,5 +245,6 @@ extension BitriseClient {
     self.slug = "fake_slug_4243534"
     self.triggerEndpoint = "https://dummy.app.bitrise.io/app/\(slug)/build/start.json"
   }
+
 }
 // #endif
