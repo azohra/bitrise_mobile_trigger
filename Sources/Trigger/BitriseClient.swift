@@ -47,18 +47,6 @@ extension BitriseClient {
       return envArray
     }
   
-//  private func httpRequest(url: String, method: HttpMethod, headers: [String: String], body: Data?) -> URLRequest {
-//    guard let endpoint = URL(string: url) else {
-//      print(":!ERROR - \(url) could not be converted to proper URL")
-//      exit(1)
-//    }
-//    var request = URLRequest(url: endpoint)
-//    request.httpMethod = method.rawValue
-//    request.allHTTPHeaderFields = headers
-//    if let body = body { request.httpBody = body }
-//    return request
-//  }
-  
   private func sendRequest(request: URLRequest) -> (Data?, URLResponse?) {
     let config = URLSessionConfiguration.default
     let session = URLSession(configuration: config)
@@ -85,9 +73,13 @@ extension BitriseClient {
     
     // build request
     //    let request = httpRequest(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
-     delegate = HTTPRequest(url: triggerEndpoint, method: .post, headers: ["Content-Type": "application/json"], body: payload)
+     delegate = HTTPRequest(
+        url: triggerEndpoint,
+        method: .post,
+        headers: ["Content-Type": "application/json"],
+        body: payload)
     
-    guard let request = delegate?.generateRequest() else {
+    guard let request = delegate?.request() else {
         print("delegate is not set properly")
         return nil
     }
@@ -121,8 +113,8 @@ extension BitriseClient {
       let endpoint = "https://api.bitrise.io/v0.1/apps/\(slug)/builds/\(buildSlug)"
       let headers = ["Content-Type": "application/json", "Authorization": theAccessToken]
 //      request.allHTTPHeaderFields = headers
-      var delegate = HTTPRequest(url: endpoint, method: .get, headers: headers, body: nil)
-      let request = delegate.generateRequest()
+      var delegate = HTTPRequest(url: endpoint, method: .get, headers: headers)
+      let request = delegate.request()
       let config = URLSessionConfiguration.default
       let session = URLSession(configuration: config)
       let (responseData, response, responseError) = session.synchronousDataTask(with: request)
@@ -165,17 +157,17 @@ extension BitriseClient {
   }
   
   // Documented at http://devcenter.bitrise.io/api/v0.1/#get-appsapp-slugbuildsbuild-sluglog
-  public func getLogInfo(slug buildSlug: String) -> BitriseLogInfoResponse? {
-    if let endpoint = URL(string: "https://api.bitrise.io/v0.1/apps/\(slug)/builds/\(buildSlug)/log") {
-      var request = URLRequest(url: endpoint)
-      request.httpMethod = "GET"
-      
-      let headers = ["Content-Type": "application/json", "Authorization": theAccessToken]
-      request.allHTTPHeaderFields = headers
-      
-      let config = URLSessionConfiguration.default
-      let session = URLSession(configuration: config)
-      let (responseData, response, responseError) = session.synchronousDataTask(with: request)
+    public mutating func getLogInfo(slug buildSlug: String) -> BitriseLogInfoResponse? {
+        let endpoint = "https://api.bitrise.io/v0.1/apps/\(slug)/builds/\(buildSlug)/log"
+        let headers = ["Content-Type": "application/json", "Authorization": theAccessToken]
+        delegate = HTTPRequest(url: endpoint, method: .get, headers: headers)
+        guard let request = delegate?.request() else {
+            print("delegate is not set properly")
+            return nil
+        }
+        let config = URLSessionConfiguration.default
+        let session = URLSession(configuration: config)
+        let (responseData, response, responseError) = session.synchronousDataTask(with: request)
       
       // TODO: CHeck guard statement
       guard responseError == nil else {
@@ -208,10 +200,10 @@ extension BitriseClient {
         return nil
       }
       
-    } else {
-      print(":!ERROR - incorrect URL to reach Bitrise service.")
-      return nil
-    }
+//    } else {
+//      print(":!ERROR - incorrect URL to reach Bitrise service.")
+//      return nil
+//    }
   }
   
   // No special headers should be added for the request to the expiring_raw_log_url.
