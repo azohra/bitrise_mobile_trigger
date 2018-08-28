@@ -1,12 +1,12 @@
 import Foundation
-struct HTTPRequest: HttpRequestEngine {
+struct HTTPRequest: HTTPRequestEngine {
     
     var url: String
     var method: HttpMethod
     var headers: [String: String]
     var body: Data?
     
-    init(url: String, method: HttpMethod, headers: [String: String], body: Data? = nil) {
+    init(url: String, method: HttpMethod, headers: [String: String] = [:], body: Data? = nil) {
         self.url = url
         self.method = method
         self.headers = headers
@@ -26,7 +26,7 @@ struct HTTPRequest: HttpRequestEngine {
         return request
     }
     
-    func sendRequest(request: URLRequest) -> (Data?, URLResponse?) {
+    func sendRequest(request: URLRequest) -> (Data?, URLResponse?, Error? ) {
         let config = URLSessionConfiguration.default
         let session = URLSession(configuration: config)
         let (responseData, response, responseError) = session.synchronousDataTask(with: request)
@@ -35,6 +35,6 @@ struct HTTPRequest: HttpRequestEngine {
             exit(1)
         }
         
-        return (responseData, response)
+        return (responseData, response, responseError)
     }
 }

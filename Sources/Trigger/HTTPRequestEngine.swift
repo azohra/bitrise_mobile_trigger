@@ -1,6 +1,6 @@
 import Foundation
 
-protocol HttpRequestEngine {
+protocol HTTPRequestEngine {
     
     var url: String { get }
     var method: HttpMethod { get }
@@ -8,5 +8,5 @@ protocol HttpRequestEngine {
     var body: Data? { get }
     
     func request() -> URLRequest
-    func sendRequest(request: URLRequest) -> (Data?, URLResponse?)
+    func sendRequest(request: URLRequest) -> (Data?, URLResponse?, Error?)
 }
