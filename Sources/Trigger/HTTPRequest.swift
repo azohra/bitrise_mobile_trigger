@@ -1,19 +1,7 @@
 import Foundation
 struct HTTPRequest: HTTPRequestEngine {
-    
-    var url: String
-    var method: HttpMethod
-    var headers: [String: String]
-    var body: Data?
-    
-    init(url: String, method: HttpMethod, headers: [String: String] = [:], body: Data? = nil) {
-        self.url = url
-        self.method = method
-        self.headers = headers
-        self.body = body
-    }
-    
-     func request() -> URLRequest {
+
+    func request(url: String, method: HttpMethod, headers: [String: String]?, body: Data?) -> URLRequest {
         // TODO: make this a throwing function to make the error bubble up
         guard let endpoint = URL(string: url) else {
             print(":!ERROR - \(url) could not be converted to proper URL")
@@ -21,7 +9,7 @@ struct HTTPRequest: HTTPRequestEngine {
         }
         var request = URLRequest(url: endpoint)
         request.httpMethod = method.rawValue
-        request.allHTTPHeaderFields = headers
+        if let headers = headers { request.allHTTPHeaderFields = headers }
         if let body = body { request.httpBody = body }
         return request
     }
