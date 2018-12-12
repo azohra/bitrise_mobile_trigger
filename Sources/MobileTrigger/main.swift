@@ -116,7 +116,6 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
     if let buildStartTime = res.data.startedOnWorkerAt, !isPrinted {
        let date = DateConverter.convert(from: buildStartTime)
        print("Build start time: ", date)
-        print(buildStartTime)
        isPrinted = true
     }
   }
