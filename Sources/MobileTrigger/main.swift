@@ -95,21 +95,32 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
   let buildURL = triggerResponse?.buildURL
   let buildSlug = triggerResponse?.buildSlug
   var buildStatus: Int = 0
-
+  var previousBuildStatusText: String?
+  var isPrinted = false
+//  var buildStartTime: String?
+    
   print("Build URL: ", buildURL!)
-
    // TODO: Implement a timeout capability
-
+  
   while buildStatus == 0 {
     sleep(5)
-    if let res = bitriseClient.checkBuildStatus(slug: buildSlug!) {
-      buildStatus = res.data.status
-    } else {
-      print(":!ERROR - checkBuildStatus returned nil")
-      exit(1)
+    guard let res = bitriseClient.checkBuildStatus(slug: buildSlug!) else {
+        print(":!ERROR - checkBuildStatus returned nil")
+        exit(1)
+    }
+    let currentBuildStatusText = res.data.statusText
+    if previousBuildStatusText != currentBuildStatusText {
+        print("Build", res.data.statusText)
+        previousBuildStatusText = currentBuildStatusText
+    }
+    buildStatus = res.data.status
+    if let buildStartTime = res.data.startedOnWorkerAt, !isPrinted {
+       let date = DateConverter.convert(from: buildStartTime)
+       print("Build start time: ", date)
+       isPrinted = true
     }
   }
-
+    
   // Fetch the build logs
   var logIsArchived: Bool = false
   var responseFromGetLogInfo: BitriseLogInfoResponse?
@@ -143,3 +154,5 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
   let exitCode: Int32 = success ? 0 : 1
   exit(exitCode)
 }
+
+
