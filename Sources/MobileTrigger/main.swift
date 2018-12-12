@@ -153,5 +153,3 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
   let exitCode: Int32 = success ? 0 : 1
   exit(exitCode)
 }
-
-
