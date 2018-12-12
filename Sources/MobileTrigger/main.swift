@@ -97,7 +97,6 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
   var buildStatus: Int = 0
   var previousBuildStatusText: String?
   var isPrinted = false
-//  var buildStartTime: String?
     
   print("Build URL: ", buildURL!)
    // TODO: Implement a timeout capability
