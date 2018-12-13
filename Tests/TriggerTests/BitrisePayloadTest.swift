@@ -3,9 +3,6 @@ import XCTest
 
 class BitrisePayloadTest: XCTestCase {
     
-    //This test is not run on Linux, because on Linux the JSONEncoder swiches the fields in
-    //the result JSON and so the test fails as the result JSON string won't be exactly the same
-    //as the expectedJSON string.
     func testPayloadObjectConversionToJSON() {
         let hookInfo = HookInformation(type: "bitrise", apiToken: "AVCTRE$3258gyt65")
         let buildParams = BuildParams(

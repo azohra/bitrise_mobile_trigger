@@ -3,10 +3,6 @@ import XCTest
 
 class DateConverterTest: XCTestCase {
 
-    override func setUp() {
-       
-    }
-
     func testDateConversion() {
         let iso8601Date = "2018-12-12T22:40:38Z"
         let expectedDate = "Dec 12, 2018 at 5:40:38 PM"
