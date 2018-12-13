@@ -27,6 +27,7 @@ class BitrisePayloadTest: XCTestCase {
         let triggeredByStr = "\"triggered_by\":\"CI\""
         let branchStr = "\"branch\":\"azi_branch\""
         let workflowIdStr = "\"workflow_id\":\"XcodeForever\""
+        //order of the fileds in the Json string produced using the JSONEncoder() changes. Below are the two possible outputs:
         let envVarsStr1 = "\"environments\":[{\"mapped_to\":\"API_TEST_ENV\",\"value\":\"This is the test value\",\"is_expand\":\"true\"},{\"mapped_to\":\"HELP_ENV\",\"value\":\"$HOME variable contains user\'s home directory path\",\"is_expand\":\"false\"}]"
         let envVarsStr2 = "\"environments\":[{\"value\":\"This is the test value\",\"mapped_to\":\"API_TEST_ENV\",\"is_expand\":\"true\"},{\"value\":\"$HOME variable contains user\'s home directory path\",\"mapped_to\":\"HELP_ENV\",\"is_expand\":\"false\"}]"
         let buildParamsStr1 = "\"build_params\":{\(workflowIdStr),\(envVarsStr1),\(triggeredByStr),\(branchStr)}"
@@ -46,8 +47,7 @@ class BitrisePayloadTest: XCTestCase {
         }
     }
     
-    func assertResult(resultString: String) {
-        
-        
-    }
+    static var allTests = [
+        ("testPayloadObjectConversionToJSON", testPayloadObjectConversionToJSON)
+    ]
 }
