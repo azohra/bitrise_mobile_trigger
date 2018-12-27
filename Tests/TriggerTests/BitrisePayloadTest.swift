@@ -38,7 +38,7 @@ class BitrisePayloadTest: XCTestCase {
         let buildParamsStr1 = "\"build_params\":{\(workflowIdStr),\(envVarsStr1),\(triggeredByStr),\(branchStr)}"
         let buildParamsStr2 = "\"build_params\":{\(workflowIdStr),\(envVarsStr2),\(triggeredByStr),\(branchStr)}"
         let expectedJSON1 = "{\(hookInfoStr),\(buildParamsStr1)}"
-      let expectedJSON2 = "{\(hookInfoStr),\(buildParamsStr2)}"
+        let expectedJSON2 = "{\(hookInfoStr),\(buildParamsStr2)}"
         let payload = BitrisePayload(apiInfo: hookInfo, params: buildParams)
         let encoder = JSONEncoder()
         
@@ -46,8 +46,11 @@ class BitrisePayloadTest: XCTestCase {
         let data = try encoder.encode(payload)
             let result = String(data: data, encoding: .utf8)!
             let errorMsg = """
-            result JSON string is not the same as the expected JSON.\nresult: \(result)
-            \nexpectedJSON: \(expectedJSON1) \nor:\n\(expectedJSON2)
+            result JSON string is not the same as the expected JSON.\n
+            result: \(result)\n
+            expectedJSON: \(expectedJSON1) \n
+            or:\n
+            \(expectedJSON2)
             """
             XCTAssert((result == expectedJSON1 || result == expectedJSON2), errorMsg)
         } catch {
