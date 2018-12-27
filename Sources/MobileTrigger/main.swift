@@ -96,7 +96,7 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
   let buildSlug = triggerResponse?.buildSlug
   var buildStatus: Int = 0
   var previousBuildStatusText: String?
-  var isPrinted = false
+  var wasStartTimePrinted = false
     
   print("Build URL: ", buildURL!)
    // TODO: Implement a timeout capability
@@ -113,10 +113,10 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
         previousBuildStatusText = currentBuildStatusText
     }
     buildStatus = res.data.status
-    if let buildStartTime = res.data.startedOnWorkerAt, !isPrinted {
+    if let buildStartTime = res.data.startedOnWorkerAt, !wasStartTimePrinted {
        let date = DateConverter.convert(from: buildStartTime)
        print("Build start time: ", date)
-       isPrinted = true
+       wasStartTimePrinted = true
     }
   }
     
