@@ -121,7 +121,7 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
   }
     
   // Fetch the build logs
-  var logIsArchived: Bool = false
+  var logIsArchived = false
   var responseFromGetLogInfo: BitriseLogInfoResponse?
 
   while !logIsArchived {
