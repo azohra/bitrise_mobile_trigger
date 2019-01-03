@@ -14,12 +14,17 @@ parser.usage("Usage: bitriseTrigger [flags] [options]")
 parser.option("-w", "--workflow-id", "WORKFLOW_ID", "Bitrise workflow id.")
 parser.option("-b", "--branch", "BRANCH_NAME", "Name of the branch to be built.")
 parser.option(
-    "-c",
-    "--config",
-    "CONFIG_PATH",
-    "Absolute path of to configuration file."
+  "-c",
+  "--config",
+  "CONFIG_PATH",
+  "Absolute path of to configuration file."
 )
-parser.option("-e", "--env", "ENVIRONMENT_VARIABLE=VALUE", "List of environment variables to be passed e.g. key1=value1,key2=value2")
+parser.option(
+  "-e",
+  "--env",
+  "ENVIRONMENT_VARIABLE=VALUE",
+  "List of environment variables to be passed e.g. key1=value1,key2=value2"
+)
 
 parser.helpFlag("-h", "--help", "Prints this help message")
 parser.flag("-V", "--version", "Version of cli running.", standAlone: true)
@@ -53,7 +58,7 @@ do {
 }
 
 // create bitrise client object
-let bitriseClient = BitriseClient(projectConfig: projectConfig)
+var bitriseClient = BitriseClient(projectConfig: projectConfig)
 
 // --------------------------------------------------------------------------------------------
 // using input data
@@ -63,13 +68,18 @@ let bitriseClient = BitriseClient(projectConfig: projectConfig)
 // --------------------------------------------------------------------------------------------
 // hit bitrise api to trigger the build and parse response
 if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? String {
-  let triggerResponse = bitriseClient.triggerWorkflow(branch: branch, workflowId: workflowId, envs: cliMap["-e"] as? String)
+  let triggerResponse = bitriseClient.triggerWorkflow(
+    branch: branch,
+    workflowId: workflowId,
+    envs: cliMap["-e"] as? String
+  )
 
   if triggerResponse?.status != "ok" {
     print(":> API call to trigger Bitrise did NOT return with `ok` status. Trigger failed.")
     
     if let slackURL = projectConfig.slackURL {
-      switch SlackClient(slackURL: slackURL).sendTriggerFailedMessageToSlack(planName: "Bitrise Plan Name goes here", workflowId: "UnitTest") {
+      switch SlackClient(slackURL: slackURL)
+        .sendTriggerFailedMessageToSlack(planName: "Bitrise Plan Name goes here", workflowId: "UnitTest") {
       case .success:
         print("error message sent to slack")
       case .failure:
@@ -85,23 +95,33 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
   let buildURL = triggerResponse?.buildURL
   let buildSlug = triggerResponse?.buildSlug
   var buildStatus: Int = 0
-
+  var previousBuildStatusText: String?
+  var wasStartTimePrinted = false
+    
   print("Build URL: ", buildURL!)
-
    // TODO: Implement a timeout capability
-
+  
   while buildStatus == 0 {
     sleep(5)
-    if let res = bitriseClient.checkBuildStatus(slug: buildSlug!) {
-      buildStatus = res.data.status
-    } else {
-      print(":!ERROR - checkBuildStatus returned nil")
-      exit(1)
+    guard let res = bitriseClient.checkBuildStatus(slug: buildSlug!) else {
+        print(":!ERROR - checkBuildStatus returned nil")
+        exit(1)
+    }
+    let currentBuildStatusText = res.data.statusText
+    if previousBuildStatusText != currentBuildStatusText {
+        print("Build", res.data.statusText)
+        previousBuildStatusText = currentBuildStatusText
+    }
+    buildStatus = res.data.status
+    if let buildStartTime = res.data.startedOnWorkerAt, !wasStartTimePrinted {
+       let date = DateConverter.convert(from: buildStartTime)
+       print("Build start time: ", date)
+       wasStartTimePrinted = true
     }
   }
-
+    
   // Fetch the build logs
-  var logIsArchived: Bool = false
+  var logIsArchived = false
   var responseFromGetLogInfo: BitriseLogInfoResponse?
 
   while !logIsArchived {

@@ -12,7 +12,7 @@ class TestObserver: NSObject, XCTestObservation {
     func testSuiteWillStart(_ testSuite: XCTestSuite) {}
 
     func testSuiteDidFinish(_ testSuite: XCTestSuite) {}
-
+    
     func testSuite(
       _ testSuite: XCTestSuite,
       didFailWithDescription description: String,
