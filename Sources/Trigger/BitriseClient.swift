@@ -4,7 +4,9 @@ enum HttpMethod: String {
   case get = "GET"
   case post = "POST"
 }
-
+enum TriggerError: Error {
+    case badKeyValueFormat
+}
 public struct BitriseClient {
   let delegate: HTTPRequestEngine
   let theAccessToken: String
@@ -26,7 +28,7 @@ extension BitriseClient {
         branch: branch,
         workflowID: workflowId,
         triggeredBy: "CI",
-        environments: convertToEnvArray(from: envs)
+        environments: try convertToEnvArray(from: envs)
         )
     let payload = BitrisePayload(apiInfo: hookInfo, params: buildParams)
     let encoder = JSONEncoder()
@@ -36,10 +38,11 @@ extension BitriseClient {
     return data
   }
   
-  private func convertToEnvArray(from envStr: String?) -> [[String: String]] {
+  private func convertToEnvArray(from envStr: String?) throws -> [[String: String]] {
     guard let envStr = envStr else { return [] }
-    let envArray: [[String: String]] = envStr.components(separatedBy: ",").map {
-      let arr = $0.components(separatedBy: ":")
+    let envArray: [[String: String]] = try envStr.components(separatedBy: ",").map {
+        let arr = $0.components(separatedBy: ":")
+        if arr.count < 2 { throw TriggerError.badKeyValueFormat }
       return ["mapped_to": "\(arr[0])", "value": "\(arr[1])", "is_expand": "true"]
     }
     return envArray
