@@ -57,4 +57,15 @@ class BitrisePayloadTest: XCTestCase {
             XCTAssert(false, "\(error)")
         }
     }
+    
+    func testPayload(){
+        let branch = "myBranch"
+        let workflow = "testWorkflow"
+        let environmentVariables = "targetBranch:develop"
+        
+//        let result = BitriseClient().triggerWorkflow(branch: branch, workflowId: workflow, envs: environmentVariables)
+        XCTAssertThrowsError(try BitriseClient().triggerWorkflow(branch: branch, workflowId: workflow, envs: environmentVariables)){(error)-> Void in
+            XCTAssertEqual (String(describing: type(of: error)) == "TriggerError", String(describing: error) == "badKeyValueFormat" )
+        }
+    }
 }
