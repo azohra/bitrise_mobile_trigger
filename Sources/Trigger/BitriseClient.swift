@@ -41,7 +41,7 @@ extension BitriseClient {
   private func convertToEnvArray(from envStr: String?) throws -> [[String: String]] {
     guard let envStr = envStr else { return [] }
     let envArray: [[String: String]] = try envStr.components(separatedBy: ",").map {
-        let arr = $0.components(separatedBy: ":")
+        let arr = $0.components(separatedBy: "=")
         if arr.count < 2 { throw TriggerError.badKeyValueFormat }
       return ["mapped_to": "\(arr[0])", "value": "\(arr[1])", "is_expand": "true"]
     }
