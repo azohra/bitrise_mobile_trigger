@@ -64,7 +64,7 @@ class BitrisePayloadTest: XCTestCase {
         let environmentVariables = "targetBranch:develop"
         let expectedErrorMessage = "badKeyValueFormat(\"key-value pairs should be passed in the form of key=value\")"
         let expectedErrorType = "TriggerError"
-        let (result, error) = BitriseClient()
+        let (_, error) = BitriseClient()
                               .triggerWorkflow(branch: branch, workflowId: workflow, envs: environmentVariables)
         let errorMsg = """
         Result error is not the same as the expected error.\n
