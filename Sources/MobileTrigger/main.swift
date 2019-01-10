@@ -84,12 +84,11 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
 
     if let slackURL = projectConfig.slackURL {
       switch SlackClient(slackURL: slackURL)
-            .sendTriggerFailedMessageToSlack(planName: "Bitrise Plan Name goes here", workflowId: "UnitTest")
-      {
-        case .success:
-          print("error message sent to slack")
-        case .failure:
-          print("Could not reach slack to give error message that trigger failed")
+        .sendTriggerFailedMessageToSlack(planName: "Bitrise Plan Name goes here", workflowId: "UnitTest"){
+      case .success:
+        print("error message sent to slack")
+      case .failure:
+        print("Could not reach slack to give error message that trigger failed")
       }
     }
 

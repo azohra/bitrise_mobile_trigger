@@ -6,7 +6,7 @@ enum HttpMethod: String {
 }
 public enum TriggerError: Error {
     case badKeyValueFormat(String)
-    case EmptyResponse(String)
+    case emptyResponse(String)
 }
 public struct BitriseClient {
   let delegate: HTTPRequestEngine
@@ -42,9 +42,11 @@ extension BitriseClient {
   private func convertToEnvArray(from envStr: String?) throws -> [[String: String]] {
     guard let envStr = envStr else { return [] }
     let envArray: [[String: String]] = try envStr.components(separatedBy: ",").map {
-        let arr = $0.components(separatedBy: "=")
-        if arr.count < 2 { throw TriggerError.badKeyValueFormat("key-value pairs should be passed in the form of key=value") }
-      return ["mapped_to": "\(arr[0])", "value": "\(arr[1])", "is_expand": "true"]
+        let separatedKeyValueArray = $0.components(separatedBy: "=")
+        if separatedKeyValueArray.count < 2 {
+            throw TriggerError.badKeyValueFormat("key-value pairs should be passed in the form of key=value")
+        }
+      return ["mapped_to": "\(separatedKeyValueArray[0])", "value": "\(separatedKeyValueArray[1])", "is_expand": "true"]
     }
     return envArray
   }
@@ -63,7 +65,6 @@ extension BitriseClient {
         return (nil, error)
     }
 
-    
     // build the request
     let request = delegate.request(
         url: triggerEndpoint,
@@ -82,7 +83,7 @@ extension BitriseClient {
     
     // APIs usually respond with the data you just sent in your POST request
     guard let data = responseData, String(data: data, encoding: .utf8) != nil else {
-      return (nil, TriggerError.EmptyResponse("no readable data received in response"))
+      return (nil, TriggerError.emptyResponse("no readable data received in response"))
     }
     
     do {
