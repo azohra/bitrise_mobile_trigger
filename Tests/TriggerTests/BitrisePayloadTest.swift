@@ -58,10 +58,10 @@ class BitrisePayloadTest: XCTestCase {
         }
     }
     
-    func testWrongFormatOfPassedEnvironmenVariables() {
+    func testEnvironmenVariablesPassedWithWrongFormat() {
         let branch = "myBranch"
         let workflow = "testWorkflow"
-        let environmentVariables = "targetBranch:develop"
+        let environmentVariables = "testKey1:testValue1,testKey2=testValue2"
         let expectedErrorMessage = "badKeyValueFormat(\"key-value pairs should be passed in the form of key=value\")"
         let expectedErrorType = "TriggerError"
         let (_, error) = BitriseClient()
@@ -77,6 +77,6 @@ class BitrisePayloadTest: XCTestCase {
     }
     
     static var allTests = [
-        ("testWrongFormatOfPassedEnvironmenVariables", testWrongFormatOfPassedEnvironmenVariables)
+        ("testEnvironmenVariablesPassedWithWrongFormat", testEnvironmenVariablesPassedWithWrongFormat)
     ]
 }
