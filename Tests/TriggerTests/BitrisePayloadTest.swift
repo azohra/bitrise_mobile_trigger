@@ -58,7 +58,7 @@ class BitrisePayloadTest: XCTestCase {
         }
     }
     
-    func testTriggerRaisesErrorForWrongEnvironmenVariablesFormat() {
+    func testWrongFormatOfPassedEnvironmenVariables() {
         let branch = "myBranch"
         let workflow = "testWorkflow"
         let environmentVariables = "targetBranch:develop"
@@ -77,6 +77,6 @@ class BitrisePayloadTest: XCTestCase {
     
     
     static var allTests = [
-        ("testTriggerRaisesErrorForWrongEnvironmenVariablesFormat", testTriggerRaisesErrorForWrongEnvironmenVariablesFormat)
+        ("testWrongFormatOfPassedEnvironmenVariables", testWrongFormatOfPassedEnvironmenVariables)
     ]
 }
