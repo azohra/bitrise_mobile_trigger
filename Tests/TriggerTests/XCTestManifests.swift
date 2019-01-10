@@ -6,7 +6,8 @@ public func allTests() -> [XCTestCaseEntry] {
         testCase(BuildStatusMessageTest.allTests),
         testCase(ConfigurationTest.allTests),
         testCase(HTTPRequestTest.allTests),
-        testCase(DateConverterTest.allTests)
+        testCase(DateConverterTest.allTests),
+        testCase(BitrisePayloadTest.allTests)
     ]
 }
 #endif
