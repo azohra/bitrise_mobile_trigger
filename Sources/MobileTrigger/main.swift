@@ -68,42 +68,48 @@ var bitriseClient = BitriseClient(projectConfig: projectConfig)
 // --------------------------------------------------------------------------------------------
 // hit bitrise api to trigger the build and parse response
 if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? String {
-  let triggerResponse = bitriseClient.triggerWorkflow(
+  let (response, responseError) = bitriseClient.triggerWorkflow(
     branch: branch,
     workflowId: workflowId,
     envs: cliMap["-e"] as? String
   )
-
-  if triggerResponse?.status != "ok" {
-    print(":> API call to trigger Bitrise did NOT return with `ok` status. Trigger failed.")
     
+  guard let triggerResponse = response else {
+    print("!ERROR:", responseError!)
+    exit(1)
+  }
+    
+  if triggerResponse.status != "ok" {
+    print(":> API call to trigger Bitrise did NOT return with `ok` status. Trigger failed.")
+
     if let slackURL = projectConfig.slackURL {
       switch SlackClient(slackURL: slackURL)
-        .sendTriggerFailedMessageToSlack(planName: "Bitrise Plan Name goes here", workflowId: "UnitTest") {
-      case .success:
-        print("error message sent to slack")
-      case .failure:
-        print("Could not reach slack to give error message that trigger failed")
+            .sendTriggerFailedMessageToSlack(planName: "Bitrise Plan Name goes here", workflowId: "UnitTest")
+      {
+        case .success:
+          print("error message sent to slack")
+        case .failure:
+          print("Could not reach slack to give error message that trigger failed")
       }
     }
 
-    exit(1)
+     exit(1)
   }
 
   print(":> Waiting on build...")
 
-  let buildURL = triggerResponse?.buildURL
-  let buildSlug = triggerResponse?.buildSlug
+  let buildURL = triggerResponse.buildURL
+  let buildSlug = triggerResponse.buildSlug
   var buildStatus: Int = 0
   var previousBuildStatusText: String?
   var wasStartTimePrinted = false
     
-  print("Build URL: ", buildURL!)
+  print("Build URL: ", buildURL)
    // TODO: Implement a timeout capability
   
   while buildStatus == 0 {
     sleep(5)
-    guard let res = bitriseClient.checkBuildStatus(slug: buildSlug!) else {
+    guard let res = bitriseClient.checkBuildStatus(slug: buildSlug) else {
         print(":!ERROR - checkBuildStatus returned nil")
         exit(1)
     }
@@ -126,7 +132,7 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
 
   while !logIsArchived {
     sleep(5)
-    responseFromGetLogInfo = bitriseClient.getLogInfo(slug: buildSlug!)
+    responseFromGetLogInfo = bitriseClient.getLogInfo(slug: buildSlug)
     guard let response = responseFromGetLogInfo else {
       print(":!ERROR - getLogInfo returned nil")
       exit(1)
@@ -143,7 +149,7 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
     print("================================================================================")
     print("==============================  Bitrise Logs End  ==============================")
   } else {
-    print("LOGS WERE NOT AVAILABLE - go to \(buildURL!) to see log.")
+    print("LOGS WERE NOT AVAILABLE - go to \(buildURL) to see log.")
   }
 
   let msg = bitriseClient.buildStatusMessage(buildStatus)
