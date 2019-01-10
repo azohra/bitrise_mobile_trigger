@@ -47,8 +47,8 @@ class BitrisePayloadTest: XCTestCase {
             let result = String(data: data, encoding: .utf8)!
             let errorMsg = """
             result JSON string is not the same as the expected JSON.\n
-            result: \(result)\n
-            expectedJSON: \(expectedJSON1) \n
+            Result: \(result)\n
+            ExpectedJSON: \(expectedJSON1) \n
             or:\n
             \(expectedJSON2)
             """
@@ -58,14 +58,25 @@ class BitrisePayloadTest: XCTestCase {
         }
     }
     
-    func testPayload(){
+    func testTriggerRaisesErrorForWrongEnvironmenVariablesFormat() {
         let branch = "myBranch"
         let workflow = "testWorkflow"
         let environmentVariables = "targetBranch:develop"
-        
-//        let result = BitriseClient().triggerWorkflow(branch: branch, workflowId: workflow, envs: environmentVariables)
-        XCTAssertThrowsError(try BitriseClient().triggerWorkflow(branch: branch, workflowId: workflow, envs: environmentVariables)){(error)-> Void in
-            XCTAssertEqual (String(describing: type(of: error)) == "TriggerError", String(describing: error) == "badKeyValueFormat" )
-        }
+        let expectedErrorMessage = "badKeyValueFormat(\"key-value pairs should be passed in the form of key=value\")"
+        let expectedErrorType = "TriggerError"
+        let (result, error) = BitriseClient().triggerWorkflow(branch: branch, workflowId: workflow, envs: environmentVariables)
+        let errorMsg = """
+        Result error is not the same as the expected error.\n
+        Result error -> \(String(describing: type(of: error!))): \(error!)\n
+        Expected error -> \(expectedErrorType): \(expectedErrorMessage) \n
+        """
+        XCTAssert( String(describing: type(of: error!)) == "TriggerError" &&
+                   String(describing: error!) == expectedErrorMessage, errorMsg )
+
     }
+    
+    
+    static var allTests = [
+        ("testTriggerRaisesErrorForWrongEnvironmenVariablesFormat", testTriggerRaisesErrorForWrongEnvironmenVariablesFormat)
+    ]
 }
