@@ -4,8 +4,9 @@ enum HttpMethod: String {
   case get = "GET"
   case post = "POST"
 }
-enum TriggerError: Error {
-    case badKeyValueFormat
+public enum TriggerError: Error {
+    case badKeyValueFormat(String)
+    case EmptyResponse(String)
 }
 public struct BitriseClient {
   let delegate: HTTPRequestEngine
@@ -42,7 +43,7 @@ extension BitriseClient {
     guard let envStr = envStr else { return [] }
     let envArray: [[String: String]] = try envStr.components(separatedBy: ",").map {
         let arr = $0.components(separatedBy: "=")
-        if arr.count < 2 { throw TriggerError.badKeyValueFormat }
+        if arr.count < 2 { throw TriggerError.badKeyValueFormat("key-value pairs should be passed in the form of key=value") }
       return ["mapped_to": "\(arr[0])", "value": "\(arr[1])", "is_expand": "true"]
     }
     return envArray
@@ -50,7 +51,7 @@ extension BitriseClient {
 }
 
 extension BitriseClient {
-  public func triggerWorkflow(branch: String, workflowId: String, envs: String?) -> BitriseTriggerResponse? {
+  public func triggerWorkflow(branch: String, workflowId: String, envs: String?) -> (BitriseTriggerResponse?, Error?) {
     let triggerEndpoint = "https://app.bitrise.io/app/\(slug)/build/start.json"
     
     // create the payload for the http call
@@ -59,12 +60,11 @@ extension BitriseClient {
     do {
       payload = try bitrisePayload(branch: branch, workflowId: workflowId, envs: envs)
     } catch {
-      print(":!ERROR - ", error)
-      exit(1)
+        return (nil, error)
     }
+
     
     // build the request
-    
     let request = delegate.request(
         url: triggerEndpoint,
         method: .post,
@@ -72,29 +72,25 @@ extension BitriseClient {
         body: payload)
     
     // send the request
-    
     let (responseData, _, responseError) = delegate.sendRequest(request: request)
     
     guard responseError == nil else {
-        print(responseError!)
-        exit(1)
+        return (nil, responseError!)
     }
     
     // TODO: log response
     
     // APIs usually respond with the data you just sent in your POST request
     guard let data = responseData, String(data: data, encoding: .utf8) != nil else {
-      print("no readable data received in response")
-      return nil
+      return (nil, TriggerError.EmptyResponse("no readable data received in response"))
     }
     
     do {
       let decoder = JSONDecoder()
       let res = try decoder.decode(BitriseTriggerResponse.self, from: data)
-      return res
+      return (res, nil)
     } catch {
-      print(error)
-      return nil
+      return (nil, error)
     }
   }
   
