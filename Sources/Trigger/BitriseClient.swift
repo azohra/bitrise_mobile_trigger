@@ -75,23 +75,24 @@ extension BitriseClient {
     // send the request
     let (responseData, _, responseError) = delegate.sendRequest(request: request)
     
-    guard responseError == nil else {
-        return (nil, responseError!)
-    }
+    if let err = responseError {
+        return (nil, err)
+    } else {
     
-    // TODO: log response
+        // TODO: log response
     
-    // APIs usually respond with the data you just sent in your POST request
-    guard let data = responseData, String(data: data, encoding: .utf8) != nil else {
-      return (nil, TriggerError.emptyResponse("no readable data received in response"))
-    }
+        // APIs usually respond with the data you just sent in your POST request
+        guard let data = responseData, String(data: data, encoding: .utf8) != nil else {
+          return (nil, TriggerError.emptyResponse("no readable data received in response"))
+        }
     
-    do {
-      let decoder = JSONDecoder()
-      let res = try decoder.decode(BitriseTriggerResponse.self, from: data)
-      return (res, nil)
-    } catch {
-      return (nil, error)
+        do {
+          let decoder = JSONDecoder()
+          let res = try decoder.decode(BitriseTriggerResponse.self, from: data)
+          return (res, nil)
+        } catch {
+          return (nil, error)
+        }
     }
   }
   
