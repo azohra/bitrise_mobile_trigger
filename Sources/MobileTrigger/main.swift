@@ -75,7 +75,7 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
   )
     
   guard let triggerResponse = response else {
-    print("!ERROR:", responseError!)
+    print("!ERROR:", responseError ?? "Both response and responseError are nil. This should not occur.")
     exit(1)
   }
     
