@@ -128,10 +128,13 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
   // Fetch the build logs
   var logIsArchived = false
   var responseFromGetLogInfo: BitriseLogInfoResponse?
-
-  while !logIsArchived {
+  var counter = 0
+  let retry = 4
+    
+  while !logIsArchived && counter < retry {
     sleep(5)
     responseFromGetLogInfo = bitriseClient.getLogInfo(slug: buildSlug)
+    counter += 1
     guard let response = responseFromGetLogInfo else {
       print(":!ERROR - getLogInfo returned nil")
       exit(1)
