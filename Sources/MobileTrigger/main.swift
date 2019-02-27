@@ -126,13 +126,16 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
   }
     
   // Fetch the build logs
+  // Polling is done before the end point is called to give bitrise time to make the build logs available
+  // Max. wait time is the pollingInterval times the number of retries, e.g. 5s x 4 retries gives a 20s max. waiting time
   var logIsArchived = false
   var responseFromGetLogInfo: BitriseLogInfoResponse?
   var counter = 0
   let retry = 4
+  let pollingInterval: UInt32 = 5
     
   while !logIsArchived && counter < retry {
-    sleep(5)
+    sleep(pollingInterval)
     responseFromGetLogInfo = bitriseClient.getLogInfo(slug: buildSlug)
     counter += 1
     guard let response = responseFromGetLogInfo else {
