@@ -24,7 +24,7 @@ class ConfigurationTest: XCTestCase {
     """
     let json: Data = validJson.data(using: String.Encoding.utf8)!
     guard let projectConfig = try? Config(with: json) else {
-      XCTAssert(false, "An error was thrown when try to great a Config instance.")
+      XCTAssert(false, "An error was thrown when trying to create a Config instance.")
       return
     }
     
@@ -64,7 +64,7 @@ class ConfigurationTest: XCTestCase {
     """.data(using: String.Encoding.utf8)!
     
     guard let projectConfig = try? Config(with: extraKey) else {
-      XCTAssert(false, "An error was thrown when try to great a Config instance.")
+      XCTAssert(false, "An error was thrown when trying to generate a Config instance.")
       return
     }
     

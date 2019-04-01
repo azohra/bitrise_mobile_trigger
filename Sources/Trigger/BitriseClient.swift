@@ -208,9 +208,9 @@ extension BitriseClient {
                 sleep(pollingInterval)
             } else {
                 if returnCode != 200 { print("Response code for checkBuildStatus was ", returnCode) }
+                responseData = responseBody
                 break
             }
-            responseData = responseBody
         }
         return responseData
     }
