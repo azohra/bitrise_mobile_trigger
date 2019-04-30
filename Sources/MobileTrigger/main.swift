@@ -125,6 +125,12 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
         }
     }
     
+    let success = buildStatus == 1
+    let buildMessage = bitriseClient.buildStatusMessage(buildStatus)
+    let exitCode: Int32 = success ? 0 : 1
+    
+    print(buildMessage)
+
     // Fetch the build logs
     // Polling is done before the end point is called to give bitrise time to make the build logs available
     // Max. wait time is the pollingInterval times the number of retries, e.g. 5s x 4 retries gives a 20s max. waiting time
@@ -140,13 +146,17 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
         counter += 1
         guard let response = responseFromGetLogInfo else {
             print(":!ERROR - getLogInfo returned nil")
-            exit(1)
+            exit(exitCode)
         }
         logIsArchived = response.isArchived
     }
-
-    let logs = bitriseClient.getLogs(from: responseFromGetLogInfo!)
-    if let logs = logs {
+    
+    guard let logInfo = responseFromGetLogInfo, let logUrl = logInfo.expiringRawLogURL else {
+        print("LOGS WERE NOT AVAILABLE - go to \(buildURL) to see log.")
+        exit(exitCode)
+    }
+    
+    if let logs = bitriseClient.getLogs(from: logUrl) {
         // Append the build logs to stdout
         print("================================================================================")
         print("============================== Bitrise Logs Start ==============================")
@@ -157,10 +167,5 @@ if let branch = cliMap["-b"] as? String, let workflowId = cliMap["-w"] as? Strin
         print("LOGS WERE NOT AVAILABLE - go to \(buildURL) to see log.")
     }
 
-    let msg = bitriseClient.buildStatusMessage(buildStatus)
-    print(msg)
-
-    let success = buildStatus == 1
-    let exitCode: Int32 = success ? 0 : 1
     exit(exitCode)
 }

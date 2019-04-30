@@ -148,12 +148,8 @@ extension BitriseClient {
 
     // No special headers should be added for the request to the expiring_raw_log_url.
     // See http://devcenter.bitrise.io/api/v0.1/#get-appsapp-slugbuildsbuild-sluglog
-    public func getLogs(from logInfo: BitriseLogInfoResponse) -> String? {
-        guard let url = logInfo.expiringRawLogURL else {
-            print(":!ERROR - Could not get the expiring raw log url!")
-            exit(1)
-        }
-        let request = delegate.request(url: url, method: .get, headers: nil, body: nil)
+    public func getLogs(from logInfoUrl: String) -> String? {
+        let request = delegate.request(url: logInfoUrl, method: .get, headers: nil, body: nil)
         let responseData = handleRequest(request: request)
         // APIs usually respond with the data you just sent in your GET request
         if let data = responseData, let utf8Representation = String(data: data, encoding: .utf8) {
